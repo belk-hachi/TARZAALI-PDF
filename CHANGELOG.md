@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-16] - Git Initialization & Viewer Fix
+
+### Fixed
+- **Template Error in Viewer**: Removed a redundant `page_numbers` span in `viewer.html` that caused errors because the variable was not provided by the routes.
+
+### Changed
+- **Git Repository Setup**: Initialized the project as a git repository.
+- **Security**: Configured `.gitignore` to protect sensitive data (`config.json`, `Labo.json`, and `.gemini/` folder).
+- **Configuration Template**: Added `config.json.example` as a safe template for environment setup.
+
 ## [2026-05-16] - Feature Enhancements & UI Indicators
 
 ### Added
