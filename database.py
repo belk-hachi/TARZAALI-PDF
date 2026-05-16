@@ -41,7 +41,19 @@ def init_db():
         cursor.execute("ALTER TABLE listes ADD COLUMN original_filename TEXT")
     except sqlite3.OperationalError:
         pass # Column already exists
-    
+
+    # Migration: Add printed_at column to patients if it doesn't exist
+    try:
+        cursor.execute("ALTER TABLE patients ADD COLUMN printed_at TIMESTAMP DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass
+
+    # Migration: Add notes column to patients if it doesn't exist
+    try:
+        cursor.execute("ALTER TABLE patients ADD COLUMN notes TEXT DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass
+
     # Table for patients
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS patients (
@@ -53,12 +65,71 @@ def init_db():
         status TEXT,
         test_count INTEGER,
         patient_json TEXT,
+        printed_at TIMESTAMP DEFAULT NULL,
+        notes TEXT DEFAULT NULL,
         FOREIGN KEY (liste_id) REFERENCES listes (id) ON DELETE CASCADE
     )
     ''')
     
     conn.commit()
     conn.close()
+
+def update_patient_notes(patient_id, notes):
+    """Update a patient's notes in the database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE patients SET notes = ? WHERE id = ?",
+        (notes.strip() if notes else None, patient_id)
+    )
+    conn.commit()
+    conn.close()
+
+def mark_patient_printed(patient_id):
+    """Mark a patient as printed/delivered with current timestamp."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE patients SET printed_at = ? WHERE id = ?",
+        (datetime.now().isoformat(), patient_id)
+    )
+    conn.commit()
+    conn.close()
+
+def get_dashboard_stats(liste_id=None):
+    """Get aggregate stats for patients, optionally filtered by liste_id."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    base_query = "FROM patients"
+    params = []
+    if liste_id:
+        base_query += " WHERE liste_id = ?"
+        params.append(liste_id)
+    
+    # Run 4 counts
+    cursor.execute(f"SELECT COUNT(*) {base_query}", params)
+    total = cursor.fetchone()[0]
+    
+    pending_cond = "status = 'pending'"
+    cursor.execute(f"SELECT COUNT(*) {base_query} {'AND' if liste_id else 'WHERE'} {pending_cond}", params)
+    pending = cursor.fetchone()[0]
+    
+    completed_cond = "status = 'completed'"
+    cursor.execute(f"SELECT COUNT(*) {base_query} {'AND' if liste_id else 'WHERE'} {completed_cond}", params)
+    completed = cursor.fetchone()[0]
+    
+    printed_cond = "printed_at IS NOT NULL"
+    cursor.execute(f"SELECT COUNT(*) {base_query} {'AND' if liste_id else 'WHERE'} {printed_cond}", params)
+    printed = cursor.fetchone()[0]
+    
+    conn.close()
+    return {
+        "total": total,
+        "pending": pending,
+        "completed": completed,
+        "printed": printed
+    }
 
 def save_extraction_result(extraction_result, original_filename=None):
     """
@@ -98,7 +169,12 @@ def save_extraction_result(extraction_result, original_filename=None):
             for sub in test.get("subTests", []):
                 statuses.add(sub.get("status", "completed"))
         
-        status = "pending" if "pending" in statuses else "completed"
+        if "pending" in statuses:
+            status = "pending"
+        elif "rejected" in statuses:
+            status = "rejected"
+        else:
+            status = "completed"
         test_count = len(tests)
         
         cursor.execute(

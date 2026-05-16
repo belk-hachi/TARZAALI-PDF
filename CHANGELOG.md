@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-16] - Patient Management & Dashboard Enhancements
+
+### Added
+- **Patient Notes**: Added a free-text notes field per patient. Notes are saved to the database and can be edited inline from the dashboard.
+- **Notes Indicator**: A 📝 badge appears next to patients with notes, with a tooltip previewing the content.
+- **Dashboard Stats Widget**: Added a row of 4 cards showing Total, Pending, Completed, and Delivered patient counts.
+- **Mark as Delivered**: Added a "Mark as remis" button for each patient to track delivery status.
+- **Delivery Tracking**: New `printed_at` timestamp column in the database to record exactly when results were handed over.
+- **Visual Status Indicators**: Row styling for delivered patients (opacity reduction and green border) to improve workflow visibility.
+- **Real-time UI Updates**: Integrated AJAX-based status updates that increment the "Remis" counter and update the UI without page reloads.
+
+### Changed
+- **Dashboard Refactoring**: Improved DOM structure with `data-patient-id` and `patient-name-text` classes for more reliable element targeting in JavaScript.
+- **Reliability Improvements**: Enhanced `saveNote()` and `fetchOnlineResults()` functions to use direct attribute selection, eliminating fragile relative DOM traversal.
+
 ## [2026-05-16] - Git Initialization & Viewer Fix
 
 ### Fixed

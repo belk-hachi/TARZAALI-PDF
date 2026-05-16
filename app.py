@@ -681,6 +681,9 @@ def dashboard():
 
     listes = database.get_all_listes()
 
+    # Get dashboard stats
+    stats = database.get_dashboard_stats(liste_id=liste_id)
+
     # Get total count for pagination
     total_count = database.count_patients(liste_id=liste_id, search_query=search_query, status_filter=status_filter)
 
@@ -708,7 +711,22 @@ def dashboard():
                            status_filter=status_filter,
                            page=page,
                            total_pages=total_pages,
-                           total_count=total_count)
+                           total_count=total_count,
+                           stats=stats)
+
+@app.route("/mark-printed/<int:patient_id>", methods=["POST"])
+def mark_printed(patient_id):
+    """Mark a patient as delivered in the database."""
+    database.mark_patient_printed(patient_id)
+    return jsonify({"success": True})
+
+@app.route("/update-notes/<int:patient_id>", methods=["POST"])
+def update_notes(patient_id):
+    """Update a patient's notes in the database."""
+    data = request.json
+    notes = data.get("notes", "")
+    database.update_patient_notes(patient_id, notes)
+    return jsonify({"success": True})
 
 @app.route("/generate-partial/<int:patient_id>", methods=["POST"])
 def generate_partial_pdf_route(patient_id):

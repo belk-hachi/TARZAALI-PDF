@@ -21,7 +21,7 @@ The JSON must follow this exact structure:
                     "normalRange": <string>,
                     "unit": <string or null>,
                     "isAbnormal": <true if result marked with * or in red, else false>,
-                    "status": <"completed" if result is a value, "pending" if "En Cours" or "Non Trié" or "En Validation" or "En Attente" or unresolved Ci-Joint>,
+                    "status": <"completed" if result is a value, "pending" if "En Cours" or "Non Trié" or "En Validation" or "En Attente" or unresolved Ci-Joint, "rejected" if "Rejeté">,
                     "method": <string — the italic text below this subtest, or "" if none>,
                     "observation": <string — the text after "Observation:" label, or "" if none>,
                     "ciJointPage": <integer — the 1-based page number where the attached annex page for this subtest is located, or null>
@@ -34,6 +34,7 @@ The JSON must follow this exact structure:
 }
 Rules:
 Extract EVERY patient, test, and subtest — do not skip any
+If a subtest result is "Rejeté", set result to "Rejeté", status to "rejected", isAbnormal to false. The observation field (e.g. "Tube non reçu") must still be captured normally.
 "method" is the small italic line directly below the subtest result (e.g. "ROCHE - ECLIA électrochimiluminescence sandwich sur Cobas 6000(e)-1")
 "observation" is the text that follows the "Observation:" label — copy it in full
 If a result has an asterisk (*) or appears in red, set isAbnormal to true
