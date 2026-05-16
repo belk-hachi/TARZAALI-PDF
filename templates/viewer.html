@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ patient_name }} - Lab PDF Processor</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; margin: 0; }
+        .toolbar {
+            background: white; border-bottom: 1px solid #e0e0e0; padding: 10px 0;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .toolbar h5 { margin: 0; font-weight: 700; }
+        .toolbar-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        .pdf-container {
+            display: flex; justify-content: center; padding: 10px;
+            min-height: calc(100vh - 60px);
+        }
+        .pdf-frame {
+            width: 98%; height: calc(100vh - 80px);
+            border: none; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,0.1);
+        }
+        .btn-action { border-radius: 8px; font-weight: 600; }
+        .page-info { font-size: 13px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="container-fluid d-flex justify-content-between align-items-center px-4">
+            <div class="d-flex align-items-center gap-3">
+                <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+                <span class="page-info d-none d-md-inline">Pages: {{ page_numbers|join(', ') or 'Toutes' }}</span>
+            </div>
+            
+            <div class="toolbar-title">
+                <h5>
+                    {% if is_source %}
+                        <i class="bi bi-file-earmark-pdf"></i> Liste : {{ patient_name }}
+                    {% else %}
+                        <i class="bi bi-person"></i> {{ patient_name }}
+                    {% endif %}
+                </h5>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm btn-action" onclick="printPdf()">
+                    <i class="bi bi-printer"></i> Imprimer
+                </button>
+                {% if not is_source %}
+                    {% if session_id == 'partial' %}
+                        <a href="/download-partial/{{ pdf_filename }}" class="btn btn-primary btn-sm btn-action">
+                            <i class="bi bi-download"></i> Télécharger
+                        </a>
+                    {% else %}
+                        <a href="/download/{{ session_id }}/{{ patient_index }}" class="btn btn-primary btn-sm btn-action">
+                            <i class="bi bi-download"></i> Télécharger
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="pdf-container">
+        <iframe id="pdf-frame" class="pdf-frame" src="{% if is_source %}/source-pdf/{{ pdf_filename }}{% else %}/pdf/{{ pdf_filename }}{% endif %}"></iframe>
+    </div>
+
+    <script>
+        function printPdf() {
+            const frame = document.getElementById('pdf-frame');
+            const pdfUrl = "{% if is_source %}/source-pdf/{{ pdf_filename }}{% else %}/pdf/{{ pdf_filename }}{% endif %}";
+            if (frame.contentWindow) {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } else {
+                // Fallback: open PDF in new tab for printing
+                window.open(pdfUrl, '_blank');
+            }
+        }
+    </script>
+</body>
+</html>

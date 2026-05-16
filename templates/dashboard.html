@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord - Lab PDF Processor</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --topbar-height: 64px;
+        }
+        body { background: #f8f9fa; min-height: 100vh; }
+        
+        /* Topbar */
+        .topbar {
+            height: var(--topbar-height);
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid #dee2e6;
+            position: fixed;
+            top: var(--topbar-height);
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            padding: 1.5rem 0;
+            z-index: 1020;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--topbar-height);
+            padding: 2rem;
+        }
+        
+        .nav-link {
+            color: #495057;
+            padding: 0.75rem 1.5rem;
+            border-left: 4px solid transparent;
+        }
+        .nav-link:hover { background: #f8f9fa; color: #0d6efd; }
+        .nav-link.active {
+            background: transparent !important;
+            color: #0d6efd !important;
+            border: none;
+            border-bottom: 2px solid #0d6efd;
+            border-radius: 0;
+            font-weight: 700;
+        }
+        
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+        .avatar.pending { background: #fff3cd; color: #856404; }
+        .avatar.completed { background: #cfe2ff; color: #084298; }
+        
+        .badge-pending { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .badge-completed { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        
+        .search-container {
+            max-width: 500px;
+            flex-grow: 1;
+            margin: 0 2rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+        .main-content h2 {
+            font-size: 1.5rem; /* Reduced by approx 4pt from standard h2 */
+        }
+
+        /* Upload Modal Styles */
+        .upload-area {
+            border: 2px dashed #d1d5db; border-radius: 12px; padding: 40px 20px;
+            text-align: center; cursor: pointer; transition: all 0.2s; background: #f9fafb;
+        }
+        .upload-area:hover { border-color: #0d6efd; background: #f0f7ff; }
+        .upload-area i { font-size: 40px; color: #0d6efd; }
+        
+        .stepper { display: none; margin-top: 10px; }
+        .step { display: flex; align-items: flex-start; margin-bottom: 15px; opacity: 0.4; transition: opacity 0.3s; }
+        .step.active { opacity: 1; }
+        .step.completed { opacity: 1; color: #198754; }
+        .step-icon { 
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid #d1d5db; 
+            display: flex; align-items: center; justify-content: center; margin-right: 12px; 
+            font-size: 12px; flex-shrink: 0; margin-top: 2px;
+        }
+        .step.active .step-icon { border-color: #0d6efd; color: #0d6efd; border-width: 3px; }
+        .step.completed .step-icon { background: #198754; border-color: #198754; color: white; }
+        .step-content { flex-grow: 1; }
+        .step-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+        .step-status { font-size: 12px; color: #6b7280; }
+        .progress { height: 6px; border-radius: 3px; margin-top: 5px; }
+
+        /* Test Details Styles */
+        .test-details-row { background-color: #fcfcfc; }
+        .test-details-container { padding: 1rem 2rem 1rem 4.5rem; }
+        .test-item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0.5rem 0; 
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 0.875rem;
+        }
+        .test-item:last-child { border-bottom: none; }
+        .abnormal-indicator { color: #dc3545; font-weight: bold; margin-left: 4px; }
+        .test-name { font-weight: 500; color: #495057; }
+        .test-result { font-weight: 600; color: #212529; }
+        .test-status-pending { color: #856404; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="d-flex align-items-center gap-2">
+            <img src="/logo.jpg" alt="Logo" style="height: 40px; border-radius: 6px;">
+            <h4 class="mb-0 text-primary fw-bold">TARZALI</h4>
+        </div>
+        
+        <div class="search-container">
+            <form action="{{ url_for('dashboard') }}" method="GET" id="search-form">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" id="search-input" class="form-control bg-light border-0" placeholder="Rechercher..." value="{{ search_query or '' }}" oninput="debounceSearch()">
+                    {% if selected_liste_id %}
+                        <input type="hidden" name="liste_id" value="{{ selected_liste_id }}">
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        
+        <div class="d-flex gap-2 ms-auto">
+            <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="bi bi-plus-lg"></i> Nouvel Upload
+            </button>
+            <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="bi bi-gear"></i> Paramètres
+            </button>
+        </div>
+    </header>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="settingsModalLabel">Paramètres</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Clé API Google Gemini</label>
+                        <input type="password" id="api_key_input" class="form-control" placeholder="Entrez votre clé API ici...">
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Modèle IA</label>
+                        <div class="input-group">
+                            <select id="model-select" class="form-select">
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                            </select>
+                            <button class="btn btn-outline-secondary" onclick="fetchModels()">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label text-primary fw-bold small">Tarzaali Online</label>
+                        <div class="mb-2">
+                            <label class="form-label text-muted small">Nom d'utilisateur</label>
+                            <input type="text" id="online_username" class="form-control" placeholder="Utilisateur">
+                        </div>
+                        <div>
+                            <label class="form-label text-muted small">Mot de passe</label>
+                            <input type="password" id="online_password" class="form-control" placeholder="Mot de passe">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-2" onclick="saveConfig()">Enregistrer Tout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="px-4 mb-3">
+            <h6 class="text-uppercase text-muted fw-bold small ls-1">Tous les Uploads</h6>
+        </div>
+        <nav class="nav flex-column">
+            <a href="{{ url_for('dashboard', q=search_query) }}" class="nav-link {% if not selected_liste_id %}active{% endif %}">
+                <i class="bi bi-grid-fill me-2"></i> Tous les Patients
+            </a>
+            {% for liste in listes %}
+            <a href="{{ url_for('dashboard', liste_id=liste.id, q=search_query) }}" class="nav-link {% if selected_liste_id == liste.id %}active{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-file-earmark-text me-2"></i> {{ liste.liste_date }}</span>
+                    <span class="badge rounded-pill bg-light text-muted">{{ liste.patient_count }}</span>
+                </div>
+                <div class="small text-muted ms-4 mt-1">{{ liste.list_number }}</div>
+            </a>
+            {% endfor %}
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    {% if search_query %}
+                        Résultats de recherche pour "{{ search_query }}"
+                    {% elif selected_liste %}
+                        Patients - {{ selected_liste.list_number }} - {{ selected_liste.liste_date }}
+                    {% else %}
+                        Patients Récents
+                    {% endif %}
+                </h2>
+                
+                <!-- Status Tabs -->
+                <div class="nav nav-pills mt-3">
+                    <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query) }}" 
+                       class="nav-link px-3 py-1 me-2 {% if not status_filter %}active{% endif %}">Tous</a>
+                    <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='pending') }}" 
+                       class="nav-link px-3 py-1 me-2 {% if status_filter == 'pending' %}active{% endif %}">En cours</a>
+                    <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='completed') }}" 
+                       class="nav-link px-3 py-1 me-2 {% if status_filter == 'completed' %}active{% endif %}">Terminé</a>
+                </div>
+            </div>
+
+            {% if selected_liste %}
+            <div class="d-flex gap-2">
+                {% if selected_liste.original_filename %}
+                <a href="{{ url_for('view_source_pdf', liste_id=selected_liste.id) }}" class="btn btn-outline-primary d-flex align-items-center gap-2 rounded-pill px-3">
+                    <i class="bi bi-file-earmark-pdf"></i> Voir Liste Originale
+                </a>
+                <button onclick="fetchOnlineResults({{ selected_liste.id }}, '{{ selected_liste.liste_date }}')" 
+                        class="btn btn-outline-success d-flex align-items-center gap-2 rounded-pill px-3"
+                        id="online-btn">
+                    <i class="bi bi-wifi"></i> Voir En Cours Online
+                </button>
+                {% endif %}
+                
+                {% if selected_liste.patient_count == 0 %}
+                <form action="{{ url_for('delete_liste_route', liste_id=selected_liste.id) }}" method="POST" onsubmit="return confirm('Voulez-vous vraiment supprimer cette liste vide ?');">
+                    <button type="submit" class="btn btn-outline-danger d-flex align-items-center gap-2 rounded-pill px-3">
+                        <i class="bi bi-trash-fill"></i> Supprimer Liste
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if patients %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Patient</th>
+                                <th>Date de Naissance</th>
+                                <th>Statut</th>
+                                <th>Tests</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in patients %}
+                            <tr>
+                                <td class="ps-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#details-{{ patient.id }}">
+                                    <div class="d-flex align-items-center">
+                                        {% set initials = (patient.last_name[0] if patient.last_name else '') + (patient.first_name[0] if patient.first_name else '') %}
+                                        <div class="avatar {{ patient.status }} me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                                            {{ initials|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold d-flex align-items-center gap-2">
+                                                {{ patient.last_name }} {{ patient.first_name }}
+                                                
+                                                {# Check for Ci-Joint #}
+                                                {% set ns = namespace(has_ci_joint=false) %}
+                                                {% set p_data = (patient.patient_json|from_json) %}
+                                                {% for test in p_data.tests %}
+                                                    {% for sub in test.subTests %}
+                                                        {% if sub.result == 'Ci-Joint' %}
+                                                            {% set ns.has_ci_joint = true %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endfor %}
+                                                
+                                                {% if ns.has_ci_joint %}
+                                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill d-flex align-items-center gap-1" 
+                                                      style="font-size: 0.65rem; padding: 0.2rem 0.5rem;"
+                                                      title="Ce dossier contient des annexes (Ci-Joint)">
+                                                    <i class="bi bi-paperclip"></i> CI-JOINT
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="small text-muted">{{ patient.list_number }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ patient.date_of_birth }}</td>
+                                <td>
+                                    <span class="badge rounded-pill badge-{{ patient.status }}">
+                                        {% if patient.status == 'pending' %}En cours{% else %}Terminé{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-light text-dark border me-2">{{ patient.test_count }}</span>
+                                        <a class="small text-primary text-decoration-none text-truncate" 
+                                           style="max-width: 200px; cursor: pointer;"
+                                           data-bs-toggle="collapse" 
+                                           href="#details-{{ patient.id }}" 
+                                           aria-expanded="false">
+                                            {% set p_data = (patient.patient_json|from_json) %}
+                                            {% for test in p_data.tests %}
+                                                {{ test.testName }}{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                            <i class="bi bi-chevron-down ms-1"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                                <td class="pe-4">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{{ url_for('view_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary" title="Voir PDF">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('download_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary" title="Télécharger">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <form action="{{ url_for('delete_patient_route', patient_id=patient.id) }}" method="POST" onsubmit="return confirm('Supprimer ce dossier patient ?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Collapsible Test Details Row -->
+                            <tr class="collapse test-details-row" id="details-{{ patient.id }}">
+                                <td colspan="5" class="p-0">
+                                    <div class="test-details-container">
+                                        <div class="d-flex justify-content-between mb-2 px-1 align-items-center">
+                                            <h6 class="fw-bold text-muted small text-uppercase mb-0">Détails des analyses</h6>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <button id="print-selected-{{ patient.id }}" 
+                                                        class="btn btn-sm btn-primary d-none" 
+                                                        onclick="printSelected({{ patient.id }})">
+                                                    <i class="bi bi-printer-fill me-1"></i> Imprimer la sélection
+                                                </button>
+                                                <div class="d-flex" style="width: 250px;">
+                                                    <small class="fw-bold text-muted small text-uppercase flex-grow-1 text-end">Résultat</small>
+                                                    <small class="fw-bold text-muted small text-uppercase" style="width: 120px; text-align: right;">Normes</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% set p_data = (patient.patient_json|from_json) %}
+                                        {% for test in p_data.tests %}
+                                            <div class="test-group-header d-flex align-items-center bg-light p-1 border-bottom">
+                                                <div class="form-check mb-0">
+                                                    <input class="form-check-input test-checkbox-{{ patient.id }}" type="checkbox" value="{{ loop.index0 }}" id="check-{{ patient.id }}-{{ loop.index0 }}" onchange="togglePrintButton({{ patient.id }})">
+                                                    <label class="form-check-label fw-bold small text-primary" for="check-{{ patient.id }}-{{ loop.index0 }}">
+                                                        {{ test.testName }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% for sub in test.subTests %}
+                                            <div class="test-item ps-4">
+                                                <div>
+                                                    <span class="test-name">{{ sub.subtestName }}</span>
+                                                    {% if test.testName != sub.subtestName %}
+                                                        <small class="text-muted ms-2">({{ test.testName }})</small>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    {% if sub.status == 'pending' %}
+                                                        <span class="test-status-pending me-3">En cours</span>
+                                                    {% else %}
+                                                        <span class="test-result me-3">{{ sub.result }} {{ sub.unit or '' }}</span>
+                                                    {% endif %}
+                                                    <span class="small text-muted" style="min-width: 120px; text-align: right;">{{ sub.normalRange or '' }}</span>
+                                                    {% if sub.isAbnormal %}
+                                                        <span class="abnormal-indicator ms-2">*</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white border-0 py-3 ps-4 border-top d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted small fw-bold text-uppercase ls-1">Total Patients :</span>
+                        <span class="ms-2 badge bg-primary rounded-pill">{{ total_count }}</span>
+                    </div>
+                    
+                    {% if total_pages > 1 %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-lg mb-0">
+                            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('dashboard', page=page-1, liste_id=selected_liste_id, q=search_query, status=status_filter) }}" aria-label="Précédent">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            
+                            {% set start_page = [1, page - 2]|max %}
+                            {% set end_page = [total_pages, start_page + 4]|min %}
+                            {% set start_page = [1, end_page - 4]|max %}
+                            
+                            {% for p in range(start_page, end_page + 1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('dashboard', page=p, liste_id=selected_liste_id, q=search_query, status=status_filter) }}">{{ p }}</a>
+                            </li>
+                            {% endfor %}
+                            
+                            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('dashboard', page=page+1, liste_id=selected_liste_id, q=search_query, status=status_filter) }}" aria-label="Suivant">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-search" style="font-size: 4rem;"></i>
+                <h3 class="mt-4">Aucun patient trouvé</h3>
+                <p>Essayez d'ajuster votre recherche ou vos filtres.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-link">Effacer tous les filtres</a>
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="uploadModalLabel">Nouvel Upload PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal-btn"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="modal-error-container"></div>
+                    
+                    <div id="upload-form-container">
+                        <form id="modal-upload-form" enctype="multipart/form-data">
+                            <div class="upload-area mb-3" onclick="document.getElementById('modal_pdf_file').click()">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                <h5 class="mt-3">Sélectionnez un fichier PDF</h5>
+                                <p class="text-muted small">ou glissez-déposez-le ici</p>
+                                <div id="modal-file-name" class="fw-bold text-primary mt-2"></div>
+                                <input type="file" name="pdf_file" id="modal_pdf_file" class="d-none" accept=".pdf" onchange="updateModalFileName(this)">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="modal-submit-btn">
+                                <i class="bi bi-cloud-upload"></i> Commencer l'extraction
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Stepper (same as upload.html) -->
+                    <div class="stepper" id="modal-processing-stepper">
+                        <div class="step" id="m-step-upload">
+                            <div class="step-icon"><i class="bi bi-upload"></i></div>
+                            <div class="step-content">
+                                <div class="step-title">Téléchargement du PDF</div>
+                                <div class="step-status" id="m-upload-status">En attente...</div>
+                                <div class="progress mt-2" id="m-upload-progress-container" style="display: none;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="m-upload-progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step" id="m-step-ai">
+                            <div class="step-icon"><i class="bi bi-robot"></i></div>
+                            <div class="step-content">
+                                <div class="step-title">Envoi à l'IA Gemini</div>
+                                <div class="step-status">Extraction intelligente en cours...</div>
+                            </div>
+                        </div>
+
+                        <div class="step" id="m-step-processing">
+                            <div class="step-icon"><i class="bi bi-gear-fill"></i></div>
+                            <div class="step-content">
+                                <div class="step-title">Analyse et Traitement</div>
+                                <div class="step-status">Mise en forme des résultats...</div>
+                            </div>
+                        </div>
+
+                        <div class="step" id="m-step-final">
+                            <div class="step-icon"><i class="bi bi-check-lg"></i></div>
+                            <div class="step-content">
+                                <div class="step-title">Finalisation</div>
+                                <div class="step-status">Préparation de votre session...</div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                            <span class="ms-2 text-primary small fw-bold">Analyse en cours...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Online Results Modal -->
+    <div class="modal fade" id="onlineModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-wifi text-success me-2"></i>
+                        Résultats En Cours Online — 
+                        <span id="online-liste-date" class="text-muted"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4" id="online-results-body">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts at the bottom for better performance and offline compatibility -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        /* --- Online Results Logic --- */
+        let onlineData = null;
+
+        function fetchOnlineResults(listeId, listeDate) {
+            const btn = document.getElementById('online-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Chargement...';
+
+            fetch(`/api/online-results/${listeId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Erreur API: " + data.error);
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                        return;
+                    }
+                    onlineData = data;
+
+                    // Collect pending patients from current DOM
+                    const pendingPatients = [];
+                    document.querySelectorAll('.badge-pending').forEach(badge => {
+                        const row = badge.closest('tr');
+                        const nameEl = row.querySelector('.fw-bold');
+                        if (nameEl) {
+                            // Normalize dashboard name: "LAST FIRST" -> upper case, single spaces
+                            const fullName = nameEl.textContent.trim().toUpperCase().replace(/\s+/g, ' ');
+                            pendingPatients.push(fullName);
+                        }
+                    });
+
+                    console.log("Patients en cours (Dashboard):", pendingPatients);
+
+                    // Filter onlineData: keep only entries matching a pending patient
+                    const matched = onlineData.filter(item => {
+                        // Normalize API name: "NOM PRENOM" -> upper case, single spaces
+                        const apiFullName = (item.Nom.trim() + " " + item.Prenom.trim()).toUpperCase().replace(/\s+/g, ' ');
+                        const isMatch = pendingPatients.includes(apiFullName);
+                        if (!isMatch) console.log(`Non-match: API(${apiFullName}) vs Dashboard List`);
+                        return isMatch;
+                    });
+
+                    console.log("Patients filtrés (Matched):", matched);
+
+                    populateOnlineModal(matched, listeDate);
+                    new bootstrap.Modal(document.getElementById('onlineModal')).show();
+
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                })
+                .catch(err => {
+                    alert("Erreur de connexion: " + err);
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                });
+        }
+
+        function populateOnlineModal(patients, listeDate) {
+            document.getElementById('online-liste-date').textContent = listeDate;
+            const body = document.getElementById('online-results-body');
+
+            if (!patients || patients.length === 0) {
+                body.innerHTML = `
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox" style="font-size:3rem"></i>
+                        <p class="mt-3">Aucun patient en cours trouvé dans les données online pour cette page.</p>
+                        <small>Note: Assurez-vous que les noms correspondent exactement (Nom Prénom).</small>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            patients.forEach(patient => {
+                html += `
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="fw-bold text-primary mb-0">
+                            <i class="bi bi-person-fill me-2"></i>${patient.Nom} ${patient.Prenom}
+                        </h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr class="small text-muted text-uppercase">
+                                    <th class="ps-3">Analyse</th>
+                                    <th>Paramètre</th>
+                                    <th>Résultat</th>
+                                    <th>Unité</th>
+                                    <th>Norme</th>
+                                    <th class="pe-3">État</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                patient.ListAnalyses.forEach(analyse => {
+                    analyse.ListParametres.forEach(param => {
+                        const isAbnormal = param.FlagNorme === 'H' || param.FlagNorme === 'B';
+                        const resultClass = isAbnormal ? 'text-danger fw-bold' : 'fw-bold';
+                        const resultText = param.Resultat || '<span class="text-muted fst-italic small">En attente</span>';
+                        const flagText = param.FlagNorme ? `<span class="badge bg-danger ms-1">${param.FlagNorme}</span>` : '';
+
+                        html += `
+                        <tr class="align-middle">
+                            <td class="ps-3 text-muted small">${analyse.Analyse}</td>
+                            <td>${param.Parametre}</td>
+                            <td><span class="${resultClass}">${resultText}</span> ${flagText}</td>
+                            <td><small>${param.Unite || ''}</small></td>
+                            <td class="text-muted small">${param.Norme || ''}</td>
+                            <td class="pe-3"><span class="badge bg-warning text-dark small">${param.EtatDescription}</span></td>
+                        </tr>`;
+                    });
+                });
+
+                html += `</tbody></table></div></div>`;
+            });
+
+            body.innerHTML = html;
+        }
+
+        /* --- Partial Print Logic --- */
+        function togglePrintButton(patientId) {
+            const checkboxes = document.querySelectorAll(`.test-checkbox-${patientId}:checked`);
+            const btn = document.getElementById(`print-selected-${patientId}`);
+            if (checkboxes.length > 0) {
+                btn.classList.remove('d-none');
+            } else {
+                btn.classList.add('d-none');
+            }
+        }
+
+        function printSelected(patientId) {
+            const checkboxes = document.querySelectorAll(`.test-checkbox-${patientId}:checked`);
+            const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            if (selectedIndices.length === 0) return;
+
+            // Send POST request to generate partial PDF
+            fetch(`/generate-partial/${patientId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ test_indices: selectedIndices })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.pdf_url) {
+                    window.location.href = data.pdf_url;
+                } else if (data.error) {
+                    alert("Erreur: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Une erreur est survenue lors de la génération du PDF partiel.");
+            });
+        }
+
+        /* --- Settings Logic --- */
+        function saveConfig() {
+            const config = {
+                api_key: document.getElementById('api_key_input').value,
+                model: document.getElementById('model-select').value,
+                online_username: document.getElementById('online_username').value,
+                online_password: document.getElementById('online_password').value
+            };
+            fetch('/api/config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(config)
+            }).then(() => {
+                alert("Paramètres enregistrés !");
+                const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+                if (modal) modal.hide();
+            });
+        }
+
+        function fetchModels() {
+            const btn = document.querySelector('[onclick="fetchModels()"]');
+            if(btn) btn.disabled = true;
+            fetch('/api/models')
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.getElementById('model-select');
+                    if(!select) return;
+                    const currentVal = select.value;
+                    select.innerHTML = '';
+                    data.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.name;
+                        opt.textContent = m.display_name;
+                        if (m.name === currentVal) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                    // Fallback if no match found
+                    if (currentVal && !select.querySelector('option[selected]')) {
+                        if (!select.innerHTML.includes(currentVal)) {
+                            select.selectedIndex = 0;
+                        }
+                    } else if (!currentVal) {
+                        select.selectedIndex = 0;
+                    }
+                    if(btn) btn.disabled = false;
+                })
+                .catch(err => {
+                    alert("Erreur lors de la récupération des modèles.");
+                    if(btn) btn.disabled = false;
+                });
+        }
+
+        /* --- Search Logic --- */
+        let searchTimer;
+        function debounceSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const input = document.getElementById('search-input');
+                if (input) {
+                    sessionStorage.setItem('search_cursor_pos', input.selectionStart);
+                    input.form.submit();
+                }
+            }, 400);
+        }
+
+        /* --- Modal Upload Logic --- */
+        function updateModalFileName(input) {
+            const fileName = input.files[0] ? input.files[0].name : '';
+            const el = document.getElementById('modal-file-name');
+            if (el) el.textContent = fileName;
+        }
+
+        function setModalStep(id, status) {
+            const step = document.getElementById(id);
+            if(!step) return;
+            step.classList.add('active');
+            if (status === 'completed') {
+                step.classList.remove('active');
+                step.classList.add('completed');
+                const icon = step.querySelector('.step-icon i');
+                if(icon) icon.className = 'bi bi-check-lg';
+            }
+        }
+
+        /* --- Initialization --- */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restore focus and cursor position on page load
+            const input = document.getElementById('search-input');
+            const query = "{{ search_query or '' }}";
+            if (input && query) {
+                input.focus();
+                const pos = sessionStorage.getItem('search_cursor_pos');
+                if (pos !== null) {
+                    input.setSelectionRange(pos, pos);
+                } else {
+                    input.setSelectionRange(query.length, query.length);
+                }
+            }
+
+            // Settings Modal Event Listener
+            const settingsModal = document.getElementById('settingsModal');
+            if (settingsModal) {
+                settingsModal.addEventListener('show.bs.modal', function () {
+                    fetch('/api/config')
+                        .then(res => res.json())
+                        .then(data => {
+                            const apiKeyInput = document.getElementById('api_key_input');
+                            const usernameInput = document.getElementById('online_username');
+                            const passwordInput = document.getElementById('online_password');
+                            const select = document.getElementById('model-select');
+                            
+                            if (apiKeyInput) apiKeyInput.value = data.api_key || '';
+                            if (usernameInput) usernameInput.value = data.online_username || '';
+                            if (passwordInput) passwordInput.value = data.online_password || '';
+                            
+                            if (select) {
+                                const modelMap = {
+                                    'gemini-2.5-flash': 'Gemini 2.5 Flash',
+                                    'models/gemini-2.5-flash': 'Gemini 2.5 Flash',
+                                    'gemini-2.0-flash': 'Gemini 2.0 Flash',
+                                    'models/gemini-2.0-flash': 'Gemini 2.0 Flash',
+                                    'gemini-1.5-flash': 'Gemini 1.5 Flash',
+                                    'models/gemini-1.5-flash': 'Gemini 1.5 Flash'
+                                };
+                                const displayName = modelMap[data.model] || data.model;
+                                select.innerHTML = `<option value="${data.model}">${displayName}</option>`;
+                            }
+                        });
+                    fetchModels();
+                });
+            }
+
+            // Upload Form Handling
+            const uploadForm = document.getElementById('modal-upload-form');
+            if (uploadForm) {
+                uploadForm.onsubmit = function(e) {
+                    e.preventDefault();
+                    
+                    const fileInput = document.getElementById('modal_pdf_file');
+                    if (!fileInput || !fileInput.files[0]) {
+                        alert("Veuillez sélectionner un fichier PDF d'abord.");
+                        return;
+                    }
+
+                    // UI Transitions
+                    document.getElementById('upload-form-container').style.display = 'none';
+                    document.getElementById('modal-error-container').innerHTML = '';
+                    document.getElementById('modal-processing-stepper').style.display = 'block';
+                    document.getElementById('close-modal-btn').style.display = 'none'; 
+
+                    const formData = new FormData(this);
+                    const xhr = new XMLHttpRequest();
+
+                    // 1. Upload Phase
+                    setModalStep('m-step-upload', 'active');
+                    document.getElementById('m-upload-progress-container').style.display = 'block';
+                    
+                    xhr.upload.onprogress = function(e) {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            document.getElementById('m-upload-progress-bar').style.width = percent + '%';
+                            document.getElementById('m-upload-status').textContent = `Téléchargement : ${percent}%`;
+                        }
+                    };
+
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 400) {
+                            if (xhr.responseURL.includes('/dashboard')) {
+                                setModalStep('m-step-processing', 'completed');
+                                setModalStep('m-step-final', 'completed');
+                                setTimeout(() => {
+                                    window.location.href = xhr.responseURL;
+                                }, 500);
+                            } else {
+                                const parser = new DOMParser();
+                                const doc = parser.parseFromString(xhr.responseText, 'text/html');
+                                const errorDiv = doc.querySelector('.alert-danger');
+                                
+                                document.getElementById('modal-processing-stepper').style.display = 'none';
+                                document.getElementById('upload-form-container').style.display = 'block';
+                                document.getElementById('close-modal-btn').style.display = 'block';
+
+                                if (errorDiv) {
+                                    document.getElementById('modal-error-container').innerHTML = `
+                                        <div class="alert alert-danger mb-3">${errorDiv.innerHTML}</div>
+                                    `;
+                                } else {
+                                    alert("Une erreur inconnue est survenue.");
+                                }
+                            }
+                        } else {
+                            alert("Erreur serveur (" + xhr.status + ")");
+                            window.location.reload();
+                        }
+                    };
+
+                    xhr.upload.onload = function() {
+                        setModalStep('m-step-upload', 'completed');
+                        document.getElementById('m-upload-status').textContent = 'Fichier reçu';
+                        setModalStep('m-step-ai', 'active');
+                        
+                        setTimeout(() => { if (xhr.readyState < 4) { setModalStep('m-step-ai', 'completed'); setModalStep('m-step-processing', 'active'); } }, 4000);
+                        setTimeout(() => { if (xhr.readyState < 4) { setModalStep('m-step-processing', 'completed'); setModalStep('m-step-final', 'active'); } }, 10000);
+                    };
+
+                    xhr.open('POST', '/upload', true);
+                    xhr.send(formData);
+                };
+            }
+
+            // Reset modal on close
+            const uploadModal = document.getElementById('uploadModal');
+            if (uploadModal) {
+                uploadModal.addEventListener('hidden.bs.modal', function () {
+                    if (uploadForm) uploadForm.reset();
+                    const fileNameEl = document.getElementById('modal-file-name');
+                    if (fileNameEl) fileNameEl.textContent = '';
+                    document.getElementById('upload-form-container').style.display = 'block';
+                    document.getElementById('modal-processing-stepper').style.display = 'none';
+                    document.getElementById('modal-error-container').innerHTML = '';
+                    document.getElementById('close-modal-btn').style.display = 'block';
+                    
+                    ['m-step-upload', 'm-step-ai', 'm-step-processing', 'm-step-final'].forEach(id => {
+                        const step = document.getElementById(id);
+                        if(!step) return;
+                        step.classList.remove('active', 'completed');
+                        const icon = step.querySelector('.step-icon i');
+                        if(!icon) return;
+                        if(id === 'm-step-upload') icon.className = 'bi bi-upload';
+                        if(id === 'm-step-ai') icon.className = 'bi bi-robot';
+                        if(id === 'm-step-processing') icon.className = 'bi bi-gear-fill';
+                        if(id === 'm-step-final') icon.className = 'bi bi-check-lg';
+                    });
+                    document.getElementById('m-upload-progress-container').style.display = 'none';
+                    document.getElementById('m-upload-progress-bar').style.width = '0%';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

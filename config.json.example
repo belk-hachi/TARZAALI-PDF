@@ -1,0 +1,6 @@
+{
+  "api_key": "YOUR_GEMINI_API_KEY",
+  "model": "models/gemini-2.0-flash",
+  "online_username": "YOUR_USERNAME",
+  "online_password": "YOUR_PASSWORD"
+}

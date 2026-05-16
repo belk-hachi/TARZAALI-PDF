@@ -1,0 +1,9 @@
+flask>=3.0
+pdfplumber>=0.10
+pypdf>=4.0
+charset-normalizer==3.4.7
+fonttools==4.62.1
+pillow==12.2.0
+reportlab==4.5.0
+google-genai
+requests>=2.31.0
