@@ -96,6 +96,17 @@ def mark_patient_printed(patient_id):
     conn.commit()
     conn.close()
 
+def unmark_patient_printed(patient_id):
+    """Unmark a patient as printed/delivered (set to NULL)."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE patients SET printed_at = NULL WHERE id = ?",
+        (patient_id,)
+    )
+    conn.commit()
+    conn.close()
+
 def get_dashboard_stats(liste_id=None):
     """Get aggregate stats for patients, optionally filtered by liste_id."""
     conn = get_db_connection()

@@ -720,6 +720,12 @@ def mark_printed(patient_id):
     database.mark_patient_printed(patient_id)
     return jsonify({"success": True})
 
+@app.route("/unmark-printed/<int:patient_id>", methods=["POST"])
+def unmark_printed(patient_id):
+    """Unmark a patient as delivered in the database."""
+    database.unmark_patient_printed(patient_id)
+    return jsonify({"success": True})
+
 @app.route("/update-notes/<int:patient_id>", methods=["POST"])
 def update_notes(patient_id):
     """Update a patient's notes in the database."""

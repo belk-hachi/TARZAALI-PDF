@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [2026-05-16] - Patient Management & Dashboard Enhancements
 
 ### Added
+- **Rejeté Visual Indicator**: Added a red "Rejeté" badge next to patient names if any of their analyses were rejected.
+- **Unmark as Delivered**: Added the ability to toggle delivery status back to "undelivered" with a confirmation prompt.
 - **Patient Notes**: Added a free-text notes field per patient. Notes are saved to the database and can be edited inline from the dashboard.
 - **Notes Indicator**: A 📝 badge appears next to patients with notes, with a tooltip previewing the content.
 - **Dashboard Stats Widget**: Added a row of 4 cards showing Total, Pending, Completed, and Delivered patient counts.
@@ -14,6 +16,9 @@ All notable changes to this project will be documented in this file.
 - **Real-time UI Updates**: Integrated AJAX-based status updates that increment the "Remis" counter and update the UI without page reloads.
 
 ### Changed
+- **UI Optimizations**: Narrowed sidebar and reduced content padding to maximize space for patient details.
+- **Icon-only Badges**: Converted "CI-JOINT" and "Rejeté" badges to icon-only indicators with tooltips to reduce visual clutter.
+- **Avatar Removal**: Removed patient initials and avatar boxes for a cleaner, more streamlined layout.
 - **Dashboard Refactoring**: Improved DOM structure with `data-patient-id` and `patient-name-text` classes for more reliable element targeting in JavaScript.
 - **Reliability Improvements**: Enhanced `saveNote()` and `fetchOnlineResults()` functions to use direct attribute selection, eliminating fragile relative DOM traversal.
 
