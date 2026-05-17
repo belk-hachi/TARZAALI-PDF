@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-17] - Visit-Isolated Patient Metadata & Schema Refactoring
+
+### Added
+- **Visit-Isolated Patient Metadata**: Decoupled patient notes and delivery status from the main extraction pipeline to ensure data persistence across re-uploads.
+- **Per-Visit Data Isolation**: Metadata is now keyed by a 4-field identity (`last_name`, `first_name`, `date_of_birth`, `liste_date`), preventing notes or status from bleeding between different visits of the same patient.
+- **Robust Schema Migration**: Implemented a sophisticated migration system in `init_db()` that handles fresh installs, legacy 3-field keys, and automated data recovery.
+- **Safe Schema Cleanup**: Successfully removed redundant `notes` and `printed_at` columns from the `patients` table using the SQLite rename/recreate/copy/drop pattern, ensuring a clean and normalized database structure.
+
+### Changed
+- **Metadata Persistence**: Notes and "remis" status now survive even if a list is deleted and re-uploaded, as they are stored in a dedicated table decoupled from the extraction results.
+- **Database Engine Refactoring**: Updated all upsert and retrieval functions (`update_patient_notes`, `mark_patient_printed`, `get_dashboard_stats`, `get_patients`) to use the new visit-isolated identity key.
+- **Stats Accuracy**: Enhanced `get_dashboard_stats` to derive delivery counts directly from the decoupled metadata table via strict identity matching.
+
 ## [2026-05-16] - Patient Management & Dashboard Enhancements
 
 ### Added

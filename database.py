@@ -24,7 +24,7 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Tables for listes
+    # 1. Ensure listes table exists (needed for metadata migration)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS listes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,74 +36,164 @@ def init_db():
     )
     ''')
 
-    # Migration: Add original_filename column if it doesn't exist (for existing DBs)
+    # Migration: Add original_filename column if it doesn't exist
     try:
         cursor.execute("ALTER TABLE listes ADD COLUMN original_filename TEXT")
     except sqlite3.OperationalError:
-        pass # Column already exists
-
-    # Migration: Add printed_at column to patients if it doesn't exist
-    try:
-        cursor.execute("ALTER TABLE patients ADD COLUMN printed_at TIMESTAMP DEFAULT NULL")
-    except sqlite3.OperationalError:
         pass
 
-    # Migration: Add notes column to patients if it doesn't exist
-    try:
-        cursor.execute("ALTER TABLE patients ADD COLUMN notes TEXT DEFAULT NULL")
-    except sqlite3.OperationalError:
-        pass
+    # 2. Handle patient_metadata migration (State A, B, or C)
+    table_exists = cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='patient_metadata'"
+    ).fetchone()
 
-    # Table for patients
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS patients (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        liste_id INTEGER,
-        last_name TEXT,
-        first_name TEXT,
-        date_of_birth TEXT,
-        status TEXT,
-        test_count INTEGER,
-        patient_json TEXT,
-        printed_at TIMESTAMP DEFAULT NULL,
-        notes TEXT DEFAULT NULL,
-        FOREIGN KEY (liste_id) REFERENCES listes (id) ON DELETE CASCADE
-    )
-    ''')
+    if table_exists:
+        columns = [row[1] for row in cursor.execute("PRAGMA table_info(patient_metadata)").fetchall()]
+        if 'liste_date' not in columns:
+            # State B: Migrate from 3-field key to 4-field key
+            cursor.execute("ALTER TABLE patient_metadata RENAME TO patient_metadata_old")
+            cursor.execute('''
+            CREATE TABLE patient_metadata (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                last_name TEXT NOT NULL,
+                first_name TEXT NOT NULL,
+                date_of_birth TEXT NOT NULL,
+                liste_date TEXT NOT NULL,
+                notes TEXT DEFAULT NULL,
+                printed_at TIMESTAMP DEFAULT NULL,
+                UNIQUE(last_name, first_name, date_of_birth, liste_date)
+            )
+            ''')
+            # Populating liste_date by joining with existing patient rows
+            cursor.execute("""
+                INSERT OR IGNORE INTO patient_metadata (last_name, first_name, date_of_birth, liste_date, notes, printed_at)
+                SELECT m.last_name, m.first_name, m.date_of_birth, l.liste_date, m.notes, m.printed_at
+                FROM patient_metadata_old m
+                JOIN patients p ON m.last_name = p.last_name AND m.first_name = p.first_name AND m.date_of_birth = p.date_of_birth
+                JOIN listes l ON p.liste_id = l.id
+            """)
+            cursor.execute("DROP TABLE patient_metadata_old")
+    else:
+        # State A: Fresh creation
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS patient_metadata (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            last_name TEXT NOT NULL,
+            first_name TEXT NOT NULL,
+            date_of_birth TEXT NOT NULL,
+            liste_date TEXT NOT NULL,
+            notes TEXT DEFAULT NULL,
+            printed_at TIMESTAMP DEFAULT NULL,
+            UNIQUE(last_name, first_name, date_of_birth, liste_date)
+        )
+        ''')
+
+    # 3. Handle patients table migration (remove notes and printed_at)
+    patients_columns = [row[1] for row in cursor.execute("PRAGMA table_info(patients)").fetchall()]
+    if 'notes' in patients_columns or 'printed_at' in patients_columns:
+        # Move any leftover data from patients table to metadata before dropping columns
+        cursor.execute("""
+            INSERT OR IGNORE INTO patient_metadata (last_name, first_name, date_of_birth, liste_date, notes, printed_at)
+            SELECT p.last_name, p.first_name, p.date_of_birth, l.liste_date, p.notes, p.printed_at
+            FROM patients p
+            JOIN listes l ON p.liste_id = l.id
+            WHERE p.notes IS NOT NULL OR p.printed_at IS NOT NULL
+        """)
+
+        # Recreate patients table without the redundant columns
+        cursor.execute('''
+        CREATE TABLE patients_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            liste_id INTEGER,
+            last_name TEXT,
+            first_name TEXT,
+            date_of_birth TEXT,
+            status TEXT,
+            test_count INTEGER,
+            patient_json TEXT,
+            FOREIGN KEY (liste_id) REFERENCES listes (id) ON DELETE CASCADE
+        )
+        ''')
+        cursor.execute("""
+            INSERT INTO patients_new (id, liste_id, last_name, first_name, date_of_birth, status, test_count, patient_json)
+            SELECT id, liste_id, last_name, first_name, date_of_birth, status, test_count, patient_json
+            FROM patients
+        """)
+        cursor.execute("DROP TABLE patients")
+        cursor.execute("ALTER TABLE patients_new RENAME TO patients")
+    else:
+        # Standard creation/check
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS patients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            liste_id INTEGER,
+            last_name TEXT,
+            first_name TEXT,
+            date_of_birth TEXT,
+            status TEXT,
+            test_count INTEGER,
+            patient_json TEXT,
+            FOREIGN KEY (liste_id) REFERENCES listes (id) ON DELETE CASCADE
+        )
+        ''')
     
     conn.commit()
     conn.close()
 
 def update_patient_notes(patient_id, notes):
-    """Update a patient's notes in the database."""
+    """Update a patient's notes in the patient_metadata table (visit-isolated)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE patients SET notes = ? WHERE id = ?",
-        (notes.strip() if notes else None, patient_id)
-    )
+    
+    # Upsert into patient_metadata using 4-field identity key (includes liste_date)
+    cursor.execute("""
+        INSERT INTO patient_metadata (last_name, first_name, date_of_birth, liste_date, notes)
+        SELECT p.last_name, p.first_name, p.date_of_birth, l.liste_date, ?
+        FROM patients p
+        JOIN listes l ON p.liste_id = l.id
+        WHERE p.id = ?
+        ON CONFLICT(last_name, first_name, date_of_birth, liste_date)
+        DO UPDATE SET notes = excluded.notes
+    """, (notes.strip() if notes else None, patient_id))
+    
     conn.commit()
     conn.close()
 
 def mark_patient_printed(patient_id):
-    """Mark a patient as printed/delivered with current timestamp."""
+    """Mark a patient as printed/delivered in patient_metadata table (visit-isolated)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE patients SET printed_at = ? WHERE id = ?",
-        (datetime.now().isoformat(), patient_id)
-    )
+    
+    now = datetime.now().isoformat()
+    cursor.execute("""
+        INSERT INTO patient_metadata (last_name, first_name, date_of_birth, liste_date, printed_at)
+        SELECT p.last_name, p.first_name, p.date_of_birth, l.liste_date, ?
+        FROM patients p
+        JOIN listes l ON p.liste_id = l.id
+        WHERE p.id = ?
+        ON CONFLICT(last_name, first_name, date_of_birth, liste_date)
+        DO UPDATE SET printed_at = excluded.printed_at
+    """, (now, patient_id))
+    
     conn.commit()
     conn.close()
 
 def unmark_patient_printed(patient_id):
-    """Unmark a patient as printed/delivered (set to NULL)."""
+    """Unmark a patient as printed/delivered in patient_metadata table (visit-isolated)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE patients SET printed_at = NULL WHERE id = ?",
-        (patient_id,)
-    )
+    
+    cursor.execute("""
+        UPDATE patient_metadata
+        SET printed_at = NULL
+        WHERE (last_name, first_name, date_of_birth, liste_date) = (
+            SELECT p.last_name, p.first_name, p.date_of_birth, l.liste_date
+            FROM patients p
+            JOIN listes l ON p.liste_id = l.id
+            WHERE p.id = ?
+        )
+    """, (patient_id,))
+    
     conn.commit()
     conn.close()
 
@@ -112,26 +202,35 @@ def get_dashboard_stats(liste_id=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    base_query = "FROM patients"
     params = []
+    where_clause = ""
     if liste_id:
-        base_query += " WHERE liste_id = ?"
+        where_clause = "WHERE p.liste_id = ?"
         params.append(liste_id)
+        
+    query_base = f"""
+        FROM patients p
+        JOIN listes l ON p.liste_id = l.id
+        LEFT JOIN patient_metadata m 
+          ON m.last_name = p.last_name 
+          AND m.first_name = p.first_name 
+          AND m.date_of_birth = p.date_of_birth
+          AND m.liste_date = l.liste_date
+        {where_clause}
+    """
     
-    # Run 4 counts
-    cursor.execute(f"SELECT COUNT(*) {base_query}", params)
+    cursor.execute(f"SELECT COUNT(*) {query_base}", params)
     total = cursor.fetchone()[0]
     
-    pending_cond = "status = 'pending'"
-    cursor.execute(f"SELECT COUNT(*) {base_query} {'AND' if liste_id else 'WHERE'} {pending_cond}", params)
+    status_filter = "AND p.status = ?" if where_clause else "WHERE p.status = ?"
+    cursor.execute(f"SELECT COUNT(*) {query_base} {status_filter}", params + ["pending"])
     pending = cursor.fetchone()[0]
     
-    completed_cond = "status = 'completed'"
-    cursor.execute(f"SELECT COUNT(*) {base_query} {'AND' if liste_id else 'WHERE'} {completed_cond}", params)
+    cursor.execute(f"SELECT COUNT(*) {query_base} {status_filter}", params + ["completed"])
     completed = cursor.fetchone()[0]
     
-    printed_cond = "printed_at IS NOT NULL"
-    cursor.execute(f"SELECT COUNT(*) {base_query} {'AND' if liste_id else 'WHERE'} {printed_cond}", params)
+    printed_filter = "AND m.printed_at IS NOT NULL" if where_clause else "WHERE m.printed_at IS NOT NULL"
+    cursor.execute(f"SELECT COUNT(*) {query_base} {printed_filter}", params)
     printed = cursor.fetchone()[0]
     
     conn.close()
@@ -231,9 +330,15 @@ def get_patients(liste_id=None, search_query=None, status_filter=None, limit=Non
     cursor = conn.cursor()
     
     query = """
-        SELECT p.*, l.list_number, l.liste_date 
+        SELECT p.*, l.list_number, l.liste_date,
+               m.notes, m.printed_at
         FROM patients p 
         JOIN listes l ON p.liste_id = l.id
+        LEFT JOIN patient_metadata m 
+          ON m.last_name = p.last_name 
+          AND m.first_name = p.first_name 
+          AND m.date_of_birth = p.date_of_birth
+          AND m.liste_date = l.liste_date
     """
     params = []
     conditions = []
