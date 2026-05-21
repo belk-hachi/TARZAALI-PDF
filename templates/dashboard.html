@@ -440,7 +440,7 @@
                     <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='completed') }}" 
                        class="nav-link px-3 py-1 me-2 {% if status_filter == 'completed' %}active{% endif %}">Terminé</a>
                     <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='not_printed') }}" 
-                       class="nav-link px-3 py-1 me-2 {% if status_filter == 'not_printed' %}active{% endif %}">Non remis</a>
+                       class="nav-link px-3 py-1 me-2 {% if status_filter == 'not_printed' %}active{% endif %}">Non Traité</a>
                 </div>
             </div>
 
@@ -509,7 +509,7 @@
                         <i class="bi bi-exclamation-circle-fill"></i>
                     </div>
                     <div>
-                        <div class="stat-label">Non remis</div>
+                        <div class="stat-label">Non Traité</div>
                         <div class="stat-value text-danger" id="stat-not-printed-value">{{ stats.not_printed }}</div>
                     </div>
                 </div>
@@ -520,7 +520,7 @@
                         <i class="bi bi-patch-check-fill"></i>
                     </div>
                     <div>
-                        <div class="stat-label">Remis</div>
+                        <div class="stat-label">Traité</div>
                         <div class="stat-value" id="stat-printed-value">{{ stats.printed }}</div>
                     </div>
                 </div>
@@ -625,12 +625,12 @@
                                 <td class="pe-4">
                                     <div class="d-flex justify-content-end gap-2">
                                         {% if not patient.printed_at %}
-                                        <button onclick="markAsPrinted({{ patient.id }}, this)" class="btn btn-sm btn-outline-secondary" title="Marquer comme remis">
+                                        <button onclick="markAsPrinted({{ patient.id }}, this)" class="btn btn-sm btn-outline-secondary" title="Marquer comme traité">
                                             <i class="bi bi-patch-check"></i>
                                         </button>
                                         {% else %}
-                                        <button onclick="unmarkAsPrinted({{ patient.id }}, this)" class="btn btn-sm badge-printed border-0 d-flex align-items-center gap-1" title="Cliquer pour annuler la remise">
-                                            <i class="bi bi-check-lg"></i> Remis
+                                        <button onclick="unmarkAsPrinted({{ patient.id }}, this)" class="btn btn-sm badge-printed border-0 d-flex align-items-center gap-1" title="Cliquer pour annuler le traitement">
+                                            <i class="bi bi-check-lg"></i> Traité
                                         </button>
                                         {% endif %}
                                         
@@ -930,7 +930,7 @@
 
         /* --- Mark as Printed Logic --- */
         function markAsPrinted(patientId, btn) {
-            if (!confirm("Marquer ce dossier comme remis ?")) return;
+            if (!confirm("Marquer ce dossier comme traité ?")) return;
             
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
@@ -946,13 +946,13 @@
                         
                         // 2. Replace button with clickable badge
                         const badgeHtml = `
-                            <button onclick="unmarkAsPrinted(${patientId}, this)" class="btn btn-sm badge-printed border-0 d-flex align-items-center gap-1" title="Cliquer pour annuler la remise">
-                                <i class="bi bi-check-lg"></i> Remis
+                            <button onclick="unmarkAsPrinted(${patientId}, this)" class="btn btn-sm badge-printed border-0 d-flex align-items-center gap-1" title="Cliquer pour annuler le traitement">
+                                <i class="bi bi-check-lg"></i> Traité
                             </button>
                         `;
                         btn.outerHTML = badgeHtml;
                         
-                        // 3. Increment "Remis" stat counter
+                        // 3. Increment "Traité" stat counter
                         const statEl = document.getElementById('stat-printed-value');
                         if (statEl) {
                             statEl.textContent = parseInt(statEl.textContent) + 1;
@@ -967,7 +967,7 @@
         }
 
         function unmarkAsPrinted(patientId, btn) {
-            if (!confirm("Voulez-vous annuler la remise de ce dossier ?")) return;
+            if (!confirm("Voulez-vous annuler le traitement de ce dossier ?")) return;
             
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
@@ -983,13 +983,13 @@
                         
                         // 2. Replace badge with original button
                         const btnHtml = `
-                            <button onclick="markAsPrinted(${patientId}, this)" class="btn btn-sm btn-outline-secondary" title="Marquer comme remis">
+                            <button onclick="markAsPrinted(${patientId}, this)" class="btn btn-sm btn-outline-secondary" title="Marquer comme traité">
                                 <i class="bi bi-patch-check"></i>
                             </button>
                         `;
                         btn.outerHTML = btnHtml;
                         
-                        // 3. Decrement "Remis" stat counter
+                        // 3. Decrement "Traité" stat counter
                         const statEl = document.getElementById('stat-printed-value');
                         if (statEl) {
                             statEl.textContent = Math.max(0, parseInt(statEl.textContent) - 1);

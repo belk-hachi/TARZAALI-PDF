@@ -2,20 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2026-05-21] - Dark Mode, "Non remis" Filter & UI Polish
+## [2026-05-21] - Dark Mode, "Non Traité" Filter & UI Polish
 
 ### Added
 - **Dark Mode Support**: Implemented a comprehensive Dark Mode across the entire application (`dashboard.html`, `upload.html`, `viewer.html`).
 - **Manual Theme Toggle**: Added a Sun/Moon toggle button in the topbar to switch between Light and Dark themes.
 - **Persistent Theme Preference**: User's theme choice is saved in `localStorage` and applied instantly on page load.
-- **"Non remis" Filter**: Added a dedicated filter and status tab for dossiers that are "Terminé" but haven't been marked as delivered (Remis).
-- **Expanded Stats Dashboard**: Added a fifth indicator card for "Non remis" with a red warning theme for better visibility of pending deliveries.
+- **"Non Traité" Filter**: Added a dedicated filter and status tab for dossiers that are "Terminé" but haven't been marked as processed (Traité).
+- **Expanded Stats Dashboard**: Added a fifth indicator card for "Non Traité" with a red warning theme for better visibility of pending dossiers.
 - **Themed UI Components**: Custom dark styling for all modals, inputs, tables, and badges to ensure a high-contrast and professional look.
 
 ### Changed
 - **Improved Search Visibility**: Redesigned the search bar with a distinct background and border to ensure it's clearly visible in Dark Mode.
-- **Enhanced "Remis" Highlighting**: Refined the styling for delivered patient rows with a light gray background in Light Mode and a dark surface-plus background in Dark Mode.
-- **Dark Mode Text Optimization**: Applied white text and high-contrast indicators for delivered patients in Dark Mode to ensure maximum legibility.
+- **Enhanced "Traité" Highlighting**: Refined the styling for processed patient rows with a light gray background in Light Mode and a dark surface-plus background in Dark Mode.
+- **Dark Mode Text Optimization**: Applied white text and high-contrast indicators for processed patients in Dark Mode to ensure maximum legibility.
 - **UI Spacing**: Adjusted the stats bar to fit 5 indicators while maintaining a clean and responsive layout.
 
 ### Fixed
