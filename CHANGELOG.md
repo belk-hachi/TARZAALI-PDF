@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - **Enhanced "Traité" Highlighting**: Refined the styling for processed patient rows with a light gray background in Light Mode and a dark surface-plus background in Dark Mode.
 - **Dark Mode Text Optimization**: Applied white text and high-contrast indicators for processed patients in Dark Mode to ensure maximum legibility.
 - **UI Spacing**: Adjusted the stats bar to fit 5 indicators while maintaining a clean and responsive layout.
+- **Documentation Update**: Updated `README.md` to reflect the new UI-based configuration system.
 
 ### Fixed
 - **Placeholder Visibility**: Fixed dark-on-dark placeholder text in the search bar for Dark Mode.

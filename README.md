@@ -39,8 +39,10 @@ TARZALI-PDF is a modern web application designed to automate the extraction of p
 ## ⚙️ Configuration
 * **API Key:** 
     1. Obtain a free API key from [Google AI Studio](https://aistudio.google.com/).
-    2. On the first run, the app will generate `gemini_key.txt`. 
-    3. Paste your key into this file and restart the application.
+    2. Open the application and click on the **⚙️ Paramètres** button in the topbar.
+    3. Paste your key into the "Clé API Google Gemini" field and click **Enregistrer Tout**. 
+    *The configuration is stored in `config.json` at the root of the project.*
+* **AI Model:** You can switch between different Gemini models directly in the **Paramètres** modal. The app defaults to Gemini 2.5 Flash for the best balance of speed and accuracy.
 * **Prompt Engineering:** Customize `prompt.md` to fine-tune how the AI extracts data from your specific report formats.
 
 ## 📦 Bundling as Executable
