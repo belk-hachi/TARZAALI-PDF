@@ -7,18 +7,52 @@
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}" rel="stylesheet">
     <style>
-        body { background: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        :root {
+            /* Light Theme Variables */
+            --bg-body: #f0f2f5;
+            --bg-surface: #ffffff;
+            --text-main: #212529;
+            --text-muted: #6b7280;
+            --border-color: #d1d5db;
+            --hover-bg: #f9fafb;
+            --upload-hover-bg: #eff6ff;
+            --accent-color: #3b82f6;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-surface: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #333333;
+            --hover-bg: #2c2c2c;
+            --upload-hover-bg: #1e3a8a33;
+            --accent-color: #60a5fa;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        body { 
+            background: var(--bg-body); 
+            color: var(--text-main);
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
         .upload-card {
             width: 100%; max-width: 500px; border-radius: 20px; border: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 40px; background: white;
+            box-shadow: var(--card-shadow); padding: 40px; background: var(--bg-surface);
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
         .upload-area {
-            border: 2px dashed #d1d5db; border-radius: 12px; padding: 40px 20px;
-            text-align: center; cursor: pointer; transition: all 0.2s; background: #f9fafb;
+            border: 2px dashed var(--border-color); border-radius: 12px; padding: 40px 20px;
+            text-align: center; cursor: pointer; transition: all 0.2s; background: var(--hover-bg);
         }
-        .upload-area:hover { border-color: #3b82f6; background: #eff6ff; }
-        .upload-area i { font-size: 48px; color: #3b82f6; }
-        .btn-primary { border-radius: 10px; padding: 12px; font-weight: 600; }
+        .upload-area:hover { border-color: var(--accent-color); background: var(--upload-hover-bg); }
+        .upload-area i { font-size: 48px; color: var(--accent-color); }
+        .btn-primary { border-radius: 10px; padding: 12px; font-weight: 600; background-color: var(--accent-color); border-color: var(--accent-color); }
         
         /* Stepper Styles */
         .stepper { display: none; margin-top: 20px; }
@@ -26,17 +60,59 @@
         .step.active { opacity: 1; }
         .step.completed { opacity: 1; color: #059669; }
         .step-icon { 
-            width: 24px; height: 24px; border-radius: 50%; border: 2px solid #d1d5db; 
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border-color); 
             display: flex; align-items: center; justify-content: center; margin-right: 12px; 
             font-size: 12px; flex-shrink: 0; margin-top: 2px;
         }
-        .step.active .step-icon { border-color: #3b82f6; color: #3b82f6; border-width: 3px; }
+        .step.active .step-icon { border-color: var(--accent-color); color: var(--accent-color); border-width: 3px; }
         .step.completed .step-icon { background: #059669; border-color: #059669; color: white; }
         .step-content { flex-grow: 1; }
-        .step-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-        .step-status { font-size: 12px; color: #6b7280; }
-        .progress { height: 8px; border-radius: 4px; margin-top: 5px; }
+        .step-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; color: var(--text-main); }
+        .step-status { font-size: 12px; color: var(--text-muted); }
+        .progress { height: 8px; border-radius: 4px; margin-top: 5px; background-color: var(--border-color); }
+
+        .modal-content {
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .form-control, .form-select {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border-color: var(--border-color);
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border-color: var(--accent-color);
+        }
+
+        /* Theme Toggle Button */
+        #theme-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            color: var(--text-main);
+        }
+        #theme-toggle:hover {
+            background: var(--hover-bg);
+            transform: scale(1.1);
+        }
     </style>
+    <script>
+        // Apply theme immediately to prevent flicker
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 </head>
 <body>
     <div class="upload-card">
@@ -52,7 +128,10 @@
         {% endif %}
 
         <div id="form-container">
-            <div class="d-flex justify-content-end mb-2">
+            <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+                <div id="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+                    <i class="bi bi-sun" id="theme-icon"></i>
+                </div>
                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
                     <i class="bi bi-gear"></i> Paramètres
                 </button>
@@ -165,6 +244,23 @@
     <!-- Scripts at the bottom -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
+        /* --- Theme Toggle Logic --- */
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
         /* --- Settings Logic --- */
         function saveConfig() {
             const config = {
@@ -230,6 +326,10 @@
 
         /* --- Initialization --- */
         document.addEventListener('DOMContentLoaded', function() {
+            // Theme Initialization
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            updateThemeIcon(savedTheme);
+
             // Settings Modal Event Listener
             const settingsModal = document.getElementById('settingsModal');
             if (settingsModal) {

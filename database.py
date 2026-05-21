@@ -229,6 +229,10 @@ def get_dashboard_stats(liste_id=None):
     cursor.execute(f"SELECT COUNT(*) {query_base} {status_filter}", params + ["completed"])
     completed = cursor.fetchone()[0]
     
+    not_printed_filter = "AND p.status = 'completed' AND m.printed_at IS NULL" if where_clause else "WHERE p.status = 'completed' AND m.printed_at IS NULL"
+    cursor.execute(f"SELECT COUNT(*) {query_base} {not_printed_filter}", params)
+    not_printed = cursor.fetchone()[0]
+    
     printed_filter = "AND m.printed_at IS NOT NULL" if where_clause else "WHERE m.printed_at IS NOT NULL"
     cursor.execute(f"SELECT COUNT(*) {query_base} {printed_filter}", params)
     printed = cursor.fetchone()[0]
@@ -238,6 +242,7 @@ def get_dashboard_stats(liste_id=None):
         "total": total,
         "pending": pending,
         "completed": completed,
+        "not_printed": not_printed,
         "printed": printed
     }
 
@@ -353,9 +358,12 @@ def get_patients(liste_id=None, search_query=None, status_filter=None, limit=Non
         search_term = f"%{search_query}%"
         params.extend([search_term, search_term, search_term])
         
-    if status_filter and status_filter in ['pending', 'completed']:
-        conditions.append("p.status = ?")
-        params.append(status_filter)
+    if status_filter:
+        if status_filter in ['pending', 'completed']:
+            conditions.append("p.status = ?")
+            params.append(status_filter)
+        elif status_filter == 'not_printed':
+            conditions.append("p.status = 'completed' AND m.printed_at IS NULL")
         
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
@@ -383,9 +391,16 @@ def count_patients(liste_id=None, search_query=None, status_filter=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    query = "SELECT COUNT(*) FROM patients p"
-    if search_query or (status_filter and status_filter in ['pending', 'completed']) or liste_id:
-        query += " JOIN listes l ON p.liste_id = l.id"
+    query = """
+        SELECT COUNT(*) 
+        FROM patients p 
+        JOIN listes l ON p.liste_id = l.id
+        LEFT JOIN patient_metadata m 
+          ON m.last_name = p.last_name 
+          AND m.first_name = p.first_name 
+          AND m.date_of_birth = p.date_of_birth
+          AND m.liste_date = l.liste_date
+    """
         
     params = []
     conditions = []
@@ -399,9 +414,12 @@ def count_patients(liste_id=None, search_query=None, status_filter=None):
         search_term = f"%{search_query}%"
         params.extend([search_term, search_term, search_term])
         
-    if status_filter and status_filter in ['pending', 'completed']:
-        conditions.append("p.status = ?")
-        params.append(status_filter)
+    if status_filter:
+        if status_filter in ['pending', 'completed']:
+            conditions.append("p.status = ?")
+            params.append(status_filter)
+        elif status_filter == 'not_printed':
+            conditions.append("p.status = 'completed' AND m.printed_at IS NULL")
         
     if conditions:
         query += " WHERE " + " AND ".join(conditions)

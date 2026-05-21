@@ -7,12 +7,39 @@
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}" rel="stylesheet">
     <style>
-        body { background: #f0f2f5; margin: 0; }
-        .toolbar {
-            background: white; border-bottom: 1px solid #e0e0e0; padding: 10px 0;
-            position: sticky; top: 0; z-index: 100;
+        :root {
+            /* Light Theme Variables */
+            --bg-body: #f0f2f5;
+            --bg-surface: #ffffff;
+            --text-main: #212529;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --hover-bg: #f8f9fa;
+            --accent-color: #0d6efd;
         }
-        .toolbar h5 { margin: 0; font-weight: 700; }
+
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-surface: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #333333;
+            --hover-bg: #2c2c2c;
+            --accent-color: #60a5fa;
+        }
+
+        body { 
+            background: var(--bg-body); 
+            color: var(--text-main);
+            margin: 0; 
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .toolbar {
+            background: var(--bg-surface); border-bottom: 1px solid var(--border-color); padding: 10px 0;
+            position: sticky; top: 0; z-index: 100;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .toolbar h5 { margin: 0; font-weight: 700; color: var(--text-main); }
         .toolbar-title {
             position: absolute;
             left: 50%;
@@ -28,8 +55,34 @@
             border: none; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,0.1);
         }
         .btn-action { border-radius: 8px; font-weight: 600; }
-        .page-info { font-size: 13px; color: #666; }
+        .page-info { font-size: 13px; color: var(--text-muted); }
+
+        /* Theme Toggle Button */
+        #theme-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            color: var(--text-main);
+        }
+        #theme-toggle:hover {
+            background: var(--hover-bg);
+            transform: scale(1.1);
+        }
     </style>
+    <script>
+        // Apply theme immediately to prevent flicker
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 </head>
 <body>
     <div class="toolbar">
@@ -38,6 +91,9 @@
                 <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left"></i> Retour
                 </a>
+                <div id="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+                    <i class="bi bi-sun" id="theme-icon"></i>
+                </div>
             </div>
             
             <div class="toolbar-title">
@@ -74,6 +130,28 @@
     </div>
 
     <script>
+        /* --- Theme Toggle Logic --- */
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            updateThemeIcon(savedTheme);
+        });
+
         function printPdf() {
             const frame = document.getElementById('pdf-frame');
             const pdfUrl = "{% if is_source %}/source-pdf/{{ pdf_filename }}{% else %}/pdf/{{ pdf_filename }}{% endif %}";
