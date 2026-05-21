@@ -6,6 +6,7 @@
     <title>Télécharger un PDF - Lab PDF Processor</title>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/google_style.css') }}" rel="stylesheet">
     <style>
         :root {
             /* Light Theme Variables */
@@ -42,17 +43,18 @@
             transition: background-color 0.3s, color 0.3s;
         }
         .upload-card {
-            width: 100%; max-width: 500px; border-radius: 20px; border: none;
-            box-shadow: var(--card-shadow); padding: 40px; background: var(--bg-surface);
-            transition: background-color 0.3s, box-shadow 0.3s;
+            width: 100%; max-width: 500px; border-radius: 28px; border: 1px solid var(--border-color);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04); padding: 40px; background: var(--bg-surface);
+            transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
         }
         .upload-area {
-            border: 2px dashed var(--border-color); border-radius: 12px; padding: 40px 20px;
-            text-align: center; cursor: pointer; transition: all 0.2s; background: var(--hover-bg);
+            border: 2px dashed var(--border-color); border-radius: 16px; padding: 40px 20px;
+            text-align: center; cursor: pointer; transition: all 0.2s ease; background: var(--bg-body);
         }
-        .upload-area:hover { border-color: var(--accent-color); background: var(--upload-hover-bg); }
-        .upload-area i { font-size: 48px; color: var(--accent-color); }
-        .btn-primary { border-radius: 10px; padding: 12px; font-weight: 600; background-color: var(--accent-color); border-color: var(--accent-color); }
+        .upload-area:hover { border-color: var(--google-blue); background: var(--google-blue-tint); }
+        .upload-area i { font-size: 48px; color: var(--google-blue); transition: transform 0.2s; }
+        .upload-area:hover i { transform: translateY(-4px); }
+        .btn-primary { border-radius: 100px; padding: 12px; font-weight: 600; }
         
         /* Stepper Styles */
         .stepper { display: none; margin-top: 20px; }
@@ -117,8 +119,9 @@
 <body>
     <div class="upload-card">
         <div class="text-center mb-4">
-            <h3 class="fw-bold">Traitement de PDF Labo</h3>
-            <p class="text-muted">Téléchargez une liste de laboratoire pour extraire les patients</p>
+            <h2 class="fw-bold text-primary mb-1">TARZALI</h2>
+            <h5 class="fw-semibold text-muted">Traitement de Listes PDF</h5>
+            <p class="text-muted small mt-2">Extraire automatiquement les dossiers patients avec l'IA Gemini</p>
         </div>
 
         {% if error %}
