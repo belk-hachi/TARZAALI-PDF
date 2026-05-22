@@ -195,7 +195,7 @@ tr:not(.printed) .patient-name-text {
 }
 
 .table tbody td {
-    padding: 10px 16px !important;
+    padding: 5px 10px !important;
     border-bottom: 1px solid var(--border-color) !important;
     font-size: 0.88rem !important;
     background-color: transparent !important; /* Inherit from row */
