@@ -2,18 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2026-05-22] - High-Quality Slate Dark Mode & Semantic UI Overhaul
+## [2026-05-22] - High-Quality Slate Dark Mode & High-Density UI
 
 ### Added
 - **Slate Semantic Dark Mode**: Implemented a professional dark theme using a Slate/Blue-Grey palette (`#0F172A`, `#1E293B`) with hierarchical layering for depth and accessibility.
 - **High-Contrast Typography**: Optimized text colors for dark mode using Slate-50 (`#F8FAFC`) for primary data and Slate-400 (`#94A3B8`) for secondary information.
-- **Interactive Hover Depth**: Added subtle Layer 2 highlights (`#334155`) for interactive rows, menu items, and buttons.
+- **Offline UI Reliability**: Fully localized all application assets. Removed Google Fonts CDN dependency in favor of high-quality system-native fonts for 100% offline rendering.
+- **Auto-Refresh Filters**: Integrated automatic page reload when marking patients as "Traité" within a filtered view, ensuring the displayed list stays accurate.
 
 ### Changed
-- **Eliminated Harsh Contrast**: Replaced all pure white content containers and data rows with elevated slate backgrounds to reduce eye strain and improve readability.
-- **Accessibility Refinement**: Standardized status badges with deep-tinted backgrounds and vibrant emerald/amber/red text variants for better visual clarity.
-- **Unified Action Buttons**: Refined action icons (View, Download, Delete) with soft transparent hover states and theme-consistent glyph colors.
-- **Table Header Overhaul**: Updated table headers to use clean dark backgrounds with muted light text, matching the professional dashboard aesthetic.
+- **High-Density Layout**:
+    - Reduced main heading font size to 1.15rem for better proportional fit.
+    - Compacted pagination controls with custom small styling and removed the bulky `pagination-lg`.
+    - Applied a global 90% zoom factor to provide the user's preferred "high-density" workspace by default.
+- **Eliminated Harsh Contrast**: Replaced all pure white content containers and data rows with elevated slate backgrounds.
+- **Accessibility Refinement**: Standardized status badges with deep-tinted backgrounds and vibrant emerald/amber/red text variants.
+- **Unified Action Buttons**: Refined action icons (View, Download, Delete) with soft transparent hover states.
+- **Table Header Overhaul**: Updated table headers to use clean dark backgrounds with muted light text.
 
 ## [2026-05-22] - Google Material 3 UI Revamp & Interactive Filters
 
