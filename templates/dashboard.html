@@ -264,18 +264,6 @@
                         Patients Récents
                     {% endif %}
                 </h2>
-                
-                <!-- Status Tabs -->
-                <div class="nav nav-pills mt-3">
-                    <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query) }}" 
-                       class="nav-link px-3 py-1 me-2 {% if not status_filter %}active{% endif %}">Tous</a>
-                    <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='pending') }}" 
-                       class="nav-link px-3 py-1 me-2 {% if status_filter == 'pending' %}active{% endif %}">En cours</a>
-                    <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='completed') }}" 
-                       class="nav-link px-3 py-1 me-2 {% if status_filter == 'completed' %}active{% endif %}">Terminé</a>
-                    <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='not_printed') }}" 
-                       class="nav-link px-3 py-1 me-2 {% if status_filter == 'not_printed' %}active{% endif %}">Non Traité</a>
-                </div>
             </div>
 
             {% if selected_liste %}
@@ -302,62 +290,72 @@
             {% endif %}
         </div>
 
-        <!-- Stats Bar -->
+        <!-- Stats Bar (Merged with Filters) -->
         <div class="row g-3 mb-4">
             <div class="col-md-2" style="width: 20%;">
-                <div class="stat-card stat-total">
-                    <div class="stat-icon">
-                        <i class="bi bi-people-fill"></i>
+                <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query) }}" class="text-decoration-none">
+                    <div class="stat-card stat-total {% if not status_filter %}active{% endif %}">
+                        <div class="stat-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div>
+                            <div class="stat-label">Total</div>
+                            <div class="stat-value">{{ stats.total }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="stat-label">Total</div>
-                        <div class="stat-value">{{ stats.total }}</div>
-                    </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-2" style="width: 20%;">
-                <div class="stat-card stat-pending">
-                    <div class="stat-icon">
-                        <i class="bi bi-clock-history"></i>
+                <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='pending') }}" class="text-decoration-none">
+                    <div class="stat-card stat-pending {% if status_filter == 'pending' %}active{% endif %}">
+                        <div class="stat-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div>
+                            <div class="stat-label">En cours</div>
+                            <div class="stat-value">{{ stats.pending }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="stat-label">En cours</div>
-                        <div class="stat-value">{{ stats.pending }}</div>
-                    </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-2" style="width: 20%;">
-                <div class="stat-card stat-completed">
-                    <div class="stat-icon">
-                        <i class="bi bi-check-circle-fill"></i>
+                <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='completed') }}" class="text-decoration-none">
+                    <div class="stat-card stat-completed {% if status_filter == 'completed' %}active{% endif %}">
+                        <div class="stat-icon">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div>
+                            <div class="stat-label">Terminés</div>
+                            <div class="stat-value">{{ stats.completed }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="stat-label">Terminés</div>
-                        <div class="stat-value">{{ stats.completed }}</div>
-                    </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-2" style="width: 20%;">
-                <div class="stat-card stat-not-printed" id="stat-not-printed-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-exclamation-circle-fill"></i>
+                <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='not_printed') }}" class="text-decoration-none">
+                    <div class="stat-card stat-not-printed {% if status_filter == 'not_printed' %}active{% endif %}" id="stat-not-printed-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                        </div>
+                        <div>
+                            <div class="stat-label">Non Traité</div>
+                            <div class="stat-value text-danger" id="stat-not-printed-value">{{ stats.not_printed }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="stat-label">Non Traité</div>
-                        <div class="stat-value text-danger" id="stat-not-printed-value">{{ stats.not_printed }}</div>
-                    </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-2" style="width: 20%;">
-                <div class="stat-card stat-printed" id="stat-printed-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-patch-check-fill"></i>
+                <a href="{{ url_for('dashboard', liste_id=selected_liste_id, q=search_query, status='printed') }}" class="text-decoration-none">
+                    <div class="stat-card stat-printed {% if status_filter == 'printed' %}active{% endif %}" id="stat-printed-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <div class="stat-label">Traité</div>
+                            <div class="stat-value" id="stat-printed-value">{{ stats.printed }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="stat-label">Traité</div>
-                        <div class="stat-value" id="stat-printed-value">{{ stats.printed }}</div>
-                    </div>
-                </div>
+                </a>
             </div>
         </div>
 

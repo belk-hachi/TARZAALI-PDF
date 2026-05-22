@@ -220,6 +220,21 @@ tr:not(.printed) .patient-name-text {
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
+    cursor: pointer !important;
+}
+
+.stat-card:hover {
+    background-color: var(--hover-bg) !important;
+    transform: translateY(-2px);
+}
+
+.stat-card.active {
+    background-color: var(--google-blue-tint) !important;
+    border-color: var(--google-blue) !important;
+}
+
+.stat-card.active .stat-label {
+    color: var(--google-blue) !important;
 }
 
 /* Color codes based on Google material themes */

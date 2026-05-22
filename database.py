@@ -364,6 +364,8 @@ def get_patients(liste_id=None, search_query=None, status_filter=None, limit=Non
             params.append(status_filter)
         elif status_filter == 'not_printed':
             conditions.append("p.status = 'completed' AND m.printed_at IS NULL")
+        elif status_filter == 'printed':
+            conditions.append("m.printed_at IS NOT NULL")
         
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
@@ -420,6 +422,8 @@ def count_patients(liste_id=None, search_query=None, status_filter=None):
             params.append(status_filter)
         elif status_filter == 'not_printed':
             conditions.append("p.status = 'completed' AND m.printed_at IS NULL")
+        elif status_filter == 'printed':
+            conditions.append("m.printed_at IS NOT NULL")
         
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
