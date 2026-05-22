@@ -840,6 +840,75 @@ def delete_patient_route(patient_id):
     return redirect(url_for("dashboard", **request.args))
 
 
+@app.route("/update-patient", methods=["POST"])
+def update_patient_route():
+    """Update patient information (name, DOB) in DB and handle metadata conflicts."""
+    data = request.json
+    patient_id = data.get("patient_id")
+    new_last_name = data.get("last_name").upper()
+    new_first_name = data.get("first_name")
+    new_dob = data.get("date_of_birth")
+    
+    if not patient_id or not new_last_name or not new_first_name:
+        return jsonify({"success": False, "error": "Champs obligatoires manquants"}), 400
+        
+    conn = database.get_db_connection()
+    try:
+        cursor = conn.cursor()
+        # Get old info
+        old_row = cursor.execute(
+            "SELECT p.last_name, p.first_name, p.date_of_birth, l.liste_date FROM patients p JOIN listes l ON p.liste_id = l.id WHERE p.id = ?",
+            (patient_id,)
+        ).fetchone()
+        
+        if not old_row:
+            return jsonify({"success": False, "error": "Patient introuvable"}), 404
+            
+        old_last, old_first, old_dob, liste_date = old_row
+        
+        # 1. Update patients table
+        cursor.execute(
+            "UPDATE patients SET last_name = ?, first_name = ?, date_of_birth = ? WHERE id = ?",
+            (new_last_name, new_first_name, new_dob, patient_id)
+        )
+        
+        # 2. Try updating metadata, if conflict, merge data then delete the duplicate
+        try:
+            cursor.execute("""
+                UPDATE patient_metadata
+                SET last_name = ?, first_name = ?, date_of_birth = ?
+                WHERE last_name = ? AND first_name = ? AND date_of_birth = ? AND liste_date = ?
+            """, (new_last_name, new_first_name, new_dob, old_last, old_first, old_dob, liste_date))
+        except database.sqlite3.IntegrityError:
+            # Conflict exists: merge old metadata into the existing record
+            # Get old metadata
+            meta = cursor.execute("""
+                SELECT notes, printed_at FROM patient_metadata 
+                WHERE last_name = ? AND first_name = ? AND date_of_birth = ? AND liste_date = ?
+            """, (old_last, old_first, old_dob, liste_date)).fetchone()
+            
+            if meta:
+                # Merge into the target record
+                cursor.execute("""
+                    UPDATE patient_metadata
+                    SET notes = COALESCE(?, notes), printed_at = COALESCE(?, printed_at)
+                    WHERE last_name = ? AND first_name = ? AND date_of_birth = ? AND liste_date = ?
+                """, (meta['notes'], meta['printed_at'], new_last_name, new_first_name, new_dob, liste_date))
+                
+                # Delete the old record
+                cursor.execute("""
+                    DELETE FROM patient_metadata 
+                    WHERE last_name = ? AND first_name = ? AND date_of_birth = ? AND liste_date = ?
+                """, (old_last, old_first, old_dob, liste_date))
+        
+        conn.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        conn.close()
+
+
 @app.route("/delete-liste/<int:liste_id>", methods=["POST"])
 def delete_liste_route(liste_id):
     """Delete an entire list ONLY if it has no patients."""
@@ -866,7 +935,12 @@ def view_patient_db(patient_id):
     if not row:
         return redirect(url_for("dashboard"))
     
+    # Reload patient from DB row to get updated name/dob
     patient = json.loads(row['patient_json'])
+    patient['lastName'] = row['last_name']
+    patient['firstName'] = row['first_name']
+    patient['dateOfBirth'] = row['date_of_birth']
+
     list_info = {
         "listNumber": row['list_number'],
         "listeDate": row['liste_date'],
@@ -907,31 +981,37 @@ def download_patient_db(patient_id):
         
     last_name = row['last_name']
     first_name = row['first_name']
+    
+    # Reload patient from DB row to get updated name/dob
     patient = json.loads(row['patient_json'])
+    patient['lastName'] = row['last_name']
+    patient['firstName'] = row['first_name']
+    patient['dateOfBirth'] = row['date_of_birth']
+
     sample_date = patient.get("sampleDate", "")
     date_suffix = re.sub(r'[^0-9]', '', sample_date)
     
     pdf_filename = f"{last_name}_{first_name}_{date_suffix}.pdf" if date_suffix else f"{last_name}_{first_name}.pdf"
     pdf_path = os.path.join(GENERATED_DIR, pdf_filename)
 
-    if not os.path.exists(pdf_path):
-        list_info = {
-            "listNumber": row['list_number'],
-            "listeDate": row['liste_date'],
-            "printDate": row['print_date']
-        }
-        
-        # Reconstruct path and pages for merging
-        original_filename = row['original_filename'] if row['original_filename'] else None
-        source_pdf_path = os.path.join(UPLOAD_DIR, original_filename) if original_filename else None
-        
-        if source_pdf_path and os.path.exists(source_pdf_path):
-            cijoint_pages = get_cijoint_pages(patient)
-        else:
-            source_pdf_path = None
-            cijoint_pages = []
+    # Always re-generate PDF to ensure updated name/DOB is picked up
+    list_info = {
+        "listNumber": row['list_number'],
+        "listeDate": row['liste_date'],
+        "printDate": row['print_date']
+    }
+    
+    # Reconstruct path and pages for merging
+    original_filename = row['original_filename'] if row['original_filename'] else None
+    source_pdf_path = os.path.join(UPLOAD_DIR, original_filename) if original_filename else None
+    
+    if source_pdf_path and os.path.exists(source_pdf_path):
+        cijoint_pages = get_cijoint_pages(patient)
+    else:
+        source_pdf_path = None
+        cijoint_pages = []
 
-        generate_patient_pdf(patient, list_info, source_pdf_path, cijoint_pages)
+    generate_patient_pdf(patient, list_info, source_pdf_path, cijoint_pages)
 
     return send_file(pdf_path,
                      as_attachment=True,

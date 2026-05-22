@@ -374,6 +374,10 @@
                                         <a href="{{ url_for('view_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary ms-1" title="Voir PDF">
                                             <i class="bi bi-eye"></i>
                                         </a>
+                                        <button type="button" class="btn btn-sm btn-outline-warning ms-1" title="Modifier"
+                                                onclick="openEditPatientModal({{ patient.id }}, '{{ patient.last_name }}', '{{ patient.first_name }}', '{{ patient.date_of_birth }}')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
                                         <a href="{{ url_for('download_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Télécharger">
                                             <i class="bi bi-download"></i>
                                         </a>
@@ -598,9 +602,68 @@
         </div>
     </div>
 
+    <!-- Edit Patient Modal -->
+    <div class="modal fade" id="editPatientModal" tabindex="-1" aria-labelledby="editPatientModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <form id="edit-patient-form">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="editPatientModalLabel">Modifier le Patient</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="edit-patient-id" name="patient_id">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Nom</label>
+                            <input type="text" id="edit-last-name" name="last_name" class="form-control" oninput="this.value = this.value.toUpperCase()" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Prénom</label>
+                            <input type="text" id="edit-first-name" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Date de naissance</label>
+                            <input type="text" id="edit-dob" name="date_of_birth" class="form-control" placeholder="DD/MM/YYYY">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
+        function openEditPatientModal(id, lastName, firstName, dob) {
+            document.getElementById('edit-patient-id').value = id;
+            document.getElementById('edit-last-name').value = lastName;
+            document.getElementById('edit-first-name').value = firstName;
+            document.getElementById('edit-dob').value = dob;
+            new bootstrap.Modal(document.getElementById('editPatientModal')).show();
+        }
+
+        document.getElementById('edit-patient-form').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/update-patient', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Erreur: ' + data.error);
+                }
+            });
+        };
         /* --- Theme Toggle Logic --- */
+
         function updateThemeIcon(theme) {
             const icon = document.getElementById('theme-icon');
             if (icon) {

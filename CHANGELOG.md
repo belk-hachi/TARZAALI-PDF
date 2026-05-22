@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-23] - Patient Edit Functionality
+
+### Added
+- **Patient Edit Icon**: Added an "Edit" (pencil) icon to the patient list in the dashboard for updating patient information.
+- **Patient Edit Modal**: Integrated a modal to update First Name, Last Name, and Date of Birth with automatic uppercase conversion for the last name.
+- **Backend Update Route**: Implemented `/update-patient` route with automatic conflict resolution to preserve patient metadata (status, notes) during name/DOB updates.
+- **Dynamic PDF Generation**: Updated PDF generation logic to retrieve the most recent patient information from the database upon every view or download.
+
+---
+
 ## [2026-05-22] - Dynamic Laboratory Configuration
 
 ### Added
