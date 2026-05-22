@@ -93,8 +93,10 @@
 }
 
 /* 1. Global Reset & Scale */
+html {
+}
+
 body {
-    zoom: 0.9;
     background: var(--bg-body) !important; 
     color: var(--text-main) !important;
     min-height: 100vh; 
@@ -426,7 +428,7 @@ tr.printed .badge:not(.badge-printed) {
     box-shadow: 0 0 0 4px var(--google-blue-tint) !important;
 }
 
-/* 9. Upload Component */
+/* 9. Upload Component & Stepper */
 .upload-card-container {
     height: 100vh;
     display: flex;
@@ -452,12 +454,48 @@ tr.printed .badge:not(.badge-printed) {
     background-color: var(--google-blue-tint);
 }
 
-/* 10. PDF Viewer Toolbar */
+.stepper { display: none; margin-top: 20px; }
+.step { display: flex; align-items: flex-start; margin-bottom: 20px; opacity: 0.4; transition: all 0.3s ease; }
+.step.active { opacity: 1; }
+.step.completed { opacity: 1; color: var(--google-green); }
+.step-icon { 
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-color); 
+    display: flex; align-items: center; justify-content: center; margin-right: 14px; 
+    font-size: 14px; flex-shrink: 0; margin-top: 2px;
+    background-color: var(--bg-surface);
+}
+.step.active .step-icon { border-color: var(--google-blue); color: var(--google-blue); border-width: 3px; }
+.step.completed .step-icon { background: var(--google-green); border-color: var(--google-green); color: white; }
+.step-content { flex-grow: 1; }
+.step-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; color: var(--text-main); }
+.step-status { font-size: 0.8rem; color: var(--text-muted); }
+
+.progress { height: 6px; border-radius: 10px; margin-top: 8px; background-color: var(--bg-hover) !important; }
+.progress-bar { background-color: var(--google-blue) !important; }
+
+/* 10. PDF Viewer Toolbar & Container */
 .toolbar {
     background-color: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
     padding: 12px 0;
     box-shadow: var(--card-shadow);
+}
+
+.pdf-container {
+    display: flex; 
+    justify-content: center; 
+    padding: 20px;
+    min-height: calc(100vh - 64px);
+    background-color: var(--bg-body);
+}
+
+.pdf-frame {
+    width: 96%; 
+    height: calc(100vh - 104px);
+    border: none; 
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    background-color: var(--bg-surface);
 }
 
 /* 11. Collapsible Details (High Contrast Fix) */
