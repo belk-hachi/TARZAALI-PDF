@@ -303,8 +303,10 @@ class HeaderDrawer:
         canvas_obj.setFont(self.fonts["NORMAL"], 9)
         phone_x = x_left + 120
 
-        canvas_obj.drawString(phone_x, y_top - 62, f"Tel: {lab_config['lab_tel']}  / Fax: {lab_config['lab_fax']}")
-        canvas_obj.drawString(phone_x, y_top - 72, f"Mobile: {lab_config['lab_mobile']}")
+        # Hardcoded contact lines as requested
+        canvas_obj.drawString(phone_x, y_top - 62, "+213 28 409 910  / +213 28 419 190")
+        canvas_obj.drawString(phone_x, y_top - 72, "+213 20 486 569  / +213 20 486 075")
+        canvas_obj.drawString(phone_x, y_top - 82, "+213 5 55 00 53 96")
 
         canvas_obj.drawRightString(x_right, y_top - 62, lab_config.get("email", self.cfg.LAB_INFO["email"]))
 
