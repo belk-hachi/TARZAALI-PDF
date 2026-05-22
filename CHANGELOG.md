@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-22] - High-Quality Slate Dark Mode & Semantic UI Overhaul
+
+### Added
+- **Slate Semantic Dark Mode**: Implemented a professional dark theme using a Slate/Blue-Grey palette (`#0F172A`, `#1E293B`) with hierarchical layering for depth and accessibility.
+- **High-Contrast Typography**: Optimized text colors for dark mode using Slate-50 (`#F8FAFC`) for primary data and Slate-400 (`#94A3B8`) for secondary information.
+- **Interactive Hover Depth**: Added subtle Layer 2 highlights (`#334155`) for interactive rows, menu items, and buttons.
+
+### Changed
+- **Eliminated Harsh Contrast**: Replaced all pure white content containers and data rows with elevated slate backgrounds to reduce eye strain and improve readability.
+- **Accessibility Refinement**: Standardized status badges with deep-tinted backgrounds and vibrant emerald/amber/red text variants for better visual clarity.
+- **Unified Action Buttons**: Refined action icons (View, Download, Delete) with soft transparent hover states and theme-consistent glyph colors.
+- **Table Header Overhaul**: Updated table headers to use clean dark backgrounds with muted light text, matching the professional dashboard aesthetic.
+
 ## [2026-05-22] - Google Material 3 UI Revamp & Interactive Filters
 
 ### Added

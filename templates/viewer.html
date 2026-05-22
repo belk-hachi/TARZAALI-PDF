@@ -7,90 +7,11 @@
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/google_style.css') }}" rel="stylesheet">
-    <style>
-        :root {
-            /* Light Theme Variables */
-            --bg-body: #f1f3f4;
-            --bg-surface: #ffffff;
-            --text-main: #202124;
-            --text-muted: #5f6368;
-            --border-color: #dadce0;
-            --hover-bg: #f1f3f4;
-        }
-
-        [data-theme="dark"] {
-            --bg-body: #202124;
-            --bg-surface: #303134;
-            --text-main: #e8eaed;
-            --text-muted: #9aa0a6;
-            --border-color: #3c4043;
-            --hover-bg: #3c4043;
-        }
-
-        body { 
-            background: var(--bg-body); 
-            color: var(--text-main);
-            margin: 0; 
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .toolbar {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-color);
-            padding: 12px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.1), 0 2px 6px 2px rgba(60,64,67,0.05);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        [data-theme="dark"] .toolbar {
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.3), 0 4px 8px 3px rgba(0,0,0,0.15);
-        }
-        .toolbar h5 { margin: 0; font-weight: 500; color: var(--text-main); font-size: 1.15rem; }
-        .toolbar-title {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-        }
-        .pdf-container {
-            display: flex; justify-content: center; padding: 20px;
-            min-height: calc(100vh - 64px);
-        }
-        .pdf-frame {
-            width: 96%; height: calc(100vh - 104px);
-            border: none; border-radius: 16px;
-            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
-            background-color: var(--bg-surface);
-        }
-        [data-theme="dark"] .pdf-frame {
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.5), 0 4px 16px 3px rgba(0,0,0,0.4);
-        }
-
-        /* Theme Toggle Button */
-        #theme-toggle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid var(--border-color);
-            background: var(--bg-surface);
-            color: var(--text-main);
-        }
-        #theme-toggle:hover {
-            background: var(--hover-bg);
-            transform: scale(1.08);
-        }
-    </style>
     <script>
         // Apply theme immediately to prevent flicker
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
         })();
     </script>
 </head>
@@ -101,7 +22,7 @@
                 <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left"></i> Retour
                 </a>
-                <div id="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+                <div id="theme-toggle" onclick="toggleTheme()" title="Changer de thème" data-dark-toggle>
                     <i class="bi bi-sun" id="theme-icon"></i>
                 </div>
             </div>
@@ -139,6 +60,7 @@
         <iframe id="pdf-frame" class="pdf-frame" src="{% if is_source %}/source-pdf/{{ pdf_filename }}{% else %}/pdf/{{ pdf_filename }}{% endif %}"></iframe>
     </div>
 
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
         /* --- Theme Toggle Logic --- */
         function updateThemeIcon(theme) {
@@ -149,10 +71,11 @@
         }
 
         function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const htmlEl = document.documentElement;
+            const currentTheme = htmlEl.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             
-            document.documentElement.setAttribute('data-theme', newTheme);
+            htmlEl.setAttribute('data-bs-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);
         }

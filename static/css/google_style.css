@@ -1,10 +1,9 @@
 /* ==========================================================================
-   TARZALI-PDF: Google Material Design 3 Revamp Stylesheet
+   TARZALI-PDF: High-Quality Slate Dark Mode & Refined Layout
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-
 :root {
+    /* Brand Colors (Material Design 3) */
     --google-blue: #1a73e8;
     --google-blue-hover: #1557b0;
     --google-blue-tint: #e8f0fe;
@@ -18,25 +17,92 @@
     --google-red: #d93025;
     --google-red-tint: #fce8e6;
 
-    --font-primary: 'Roboto', system-ui, -apple-system, sans-serif;
+    --font-primary: system-ui, -apple-system, sans-serif;
+
+    /* Layout Variables */
+    --sidebar-width: 250px;
+    --topbar-height: 64px;
+    
+    /* Light Theme Palette (Layered Hierarchy) */
+    --bg-body: #f8f9fa;      /* Layer 0 */
+    --bg-surface: #ffffff;   /* Layer 1 */
+    --bg-hover: #f1f3f4;     /* Layer 2 */
+    
+    --text-main: #212529;
+    --text-muted: #5f6368;
+    --border-color: #dadce0;
+    
+    --card-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+    --table-header-bg: #f8f9fa;
 }
 
-[data-theme="dark"] {
-    --google-blue: #8ab4f8;
-    --google-blue-hover: #aecbfa;
-    --google-blue-tint: #303f56;
+[data-bs-theme="dark"] {
+    /* Semantic Colors (Vibrant variants for Dark Backgrounds) */
+    --google-blue: #60a5fa;  /* blue-400 */
+    --google-blue-hover: #93c5fd;
+    --google-blue-tint: rgba(96, 165, 250, 0.15);
     
-    --google-green: #81c995;
-    --google-green-tint: #0f3a22;
+    --google-green: #34d399; /* emerald-400 */
+    --google-green-tint: rgba(6, 78, 59, 0.4); /* emerald-950 opacity */
     
-    --google-yellow: #fdd663;
-    --google-yellow-tint: #40320a;
+    --google-yellow: #fbbf24; /* amber-400 */
+    --google-yellow-tint: rgba(120, 53, 15, 0.4);
     
-    --google-red: #f28b82;
-    --google-red-tint: #4c1c1c;
+    --google-red: #f87171;    /* red-400 */
+    --google-red-tint: rgba(127, 29, 29, 0.4);
+
+    /* Slate Semantic Hierarchy (Layered depth) */
+    --bg-body: #0F172A;      /* Layer 0: Deep Slate Base */
+    --bg-surface: #1E293B;   /* Layer 1: Elevated Slate Container */
+    --bg-hover: #334155;     /* Layer 2: Interactive Slate Highlight */
+    
+    --text-main: #F8FAFC;    /* High-contrast off-white (slate-50) */
+    --text-muted: #94A3B8;   /* Muted gray-blue (slate-400) */
+    --border-color: #334155; /* slate-700 for subtle division */
+    
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --table-header-bg: #0F172A; /* Match base for clean integration */
+    
+    /* Global component aliases */
+    --card-bg: var(--bg-surface);
+    --sidebar-bg: var(--bg-surface);
+    --topbar-bg: var(--bg-surface);
 }
 
-/* 1. Global Typography Reset */
+/* Utility Overrides for Dark Mode */
+[data-bs-theme="dark"] .bg-light, 
+[data-bs-theme="dark"] .table-light,
+[data-bs-theme="dark"] .card-header.bg-light,
+[data-bs-theme="dark"] .test-group-header.bg-light {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-main) !important;
+}
+
+[data-bs-theme="dark"] .bg-white,
+[data-bs-theme="dark"] .card-footer.bg-white {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+    color: var(--text-main) !important;
+}
+
+[data-bs-theme="dark"] .border {
+    border-color: var(--border-color) !important;
+}
+
+/* 1. Global Reset & Scale */
+body {
+    zoom: 0.9;
+    background: var(--bg-body) !important; 
+    color: var(--text-main) !important;
+    min-height: 100vh; 
+    margin: 0;
+    font-family: var(--font-primary) !important;
+    transition: background-color 0.3s, color 0.3s;
+}
+
 body, input, select, textarea, button, .table, .modal-title, .nav-link {
     font-family: var(--font-primary) !important;
     letter-spacing: 0.01em !important;
@@ -44,242 +110,136 @@ body, input, select, textarea, button, .table, .modal-title, .nav-link {
 }
 
 .patient-name-text {
-    font-family: 'Roboto', sans-serif !important;
     font-size: 1rem !important;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease;
+    color: var(--text-main) !important;
 }
 
 /* Unread (Not Traité) state */
 tr:not(.printed) .patient-name-text {
     font-weight: 700 !important;
-    color: var(--text-main) !important;
 }
 
-/* 2. Topbar Gmail-Style Search Box */
-.topbar .btn {
-    padding: 5px 14px !important;
-    font-size: 0.78rem !important;
-    font-weight: 500 !important;
+/* 2. Structural Elements */
+.topbar {
+    height: var(--topbar-height);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
 }
 
-.topbar .btn i {
-    font-size: 0.8rem !important;
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    top: var(--topbar-height);
+    bottom: 0;
+    left: 0;
+    overflow-y: auto;
+    padding: 1.5rem 0;
+    z-index: 1020;
 }
 
-.search-container .bi-search {
-    font-size: 0.95rem !important;
-    color: var(--text-muted) !important;
+.main-content {
+    margin-left: var(--sidebar-width);
+    margin-top: var(--topbar-height);
+    padding: 1.5rem 2rem;
 }
 
-.search-container {
-    max-width: 680px !important;
-    flex-grow: 1;
-    margin: 0 auto !important;
+.empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    color: var(--text-muted);
 }
 
-.search-container .input-group {
-    background-color: #f1f3f4 !important; /* Material standard grey container */
-    border: 1px solid transparent !important;
-    border-radius: 28px !important;       /* Deeply rounded container */
-    padding: 2px 12px !important;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-[data-theme="dark"] .search-container .input-group {
-    background-color: #2a2b2e !important;
-}
-
-.search-container input {
-    background-color: transparent !important;
-    color: var(--text-main) !important;
-    font-size: 0.95rem;
-    font-weight: 400;
-}
-
-.search-container input:focus {
-    box-shadow: none !important;
-    outline: none !important;
-}
-
-.search-container .input-group:focus-within {
+/* 3. Cards & Tables */
+.card {
     background-color: var(--bg-surface) !important;
-    border-color: #dadce0 !important;
-    box-shadow: 0 1px 3px 0 rgba(60,64,67,0.2), 0 4px 8px 3px rgba(60,64,67,0.1) !important;
-}
-
-[data-theme="dark"] .search-container .input-group:focus-within {
-    border-color: #3c4043 !important;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.5), 0 4px 12px 3px rgba(0,0,0,0.4) !important;
-}
-
-/* 3. Material 3 Navigation Rail & Capsules */
-.sidebar .nav-link {
-    border-radius: 0 28px 28px 0 !important; /* Material right-rounded capsule shape */
-    margin-right: 12px;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    padding: 10px 24px !important;
-    border-left: none !important; /* Get rid of sharp lines */
-    color: var(--text-muted) !important;
-    font-weight: 500 !important;
-    font-size: 0.9rem !important;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.sidebar .nav-link i {
-    font-size: 0.95rem !important;
-    margin-right: 10px;
-    vertical-align: -1px;
-}
-
-.sidebar .nav-link:hover {
-    background-color: var(--hover-bg) !important;
-    color: var(--text-main) !important;
-    text-decoration: none;
-}
-
-.sidebar .nav-link.active {
-    background-color: var(--google-blue-tint) !important;
-    color: var(--google-blue) !important;
-    font-weight: 600 !important;
-}
-
-.sidebar .nav-link .badge {
-    background-color: rgba(0,0,0,0.05) !important;
-    color: var(--text-muted) !important;
-    font-weight: 500;
-}
-
-[data-theme="dark"] .sidebar .nav-link .badge {
-    background-color: rgba(255,255,255,0.05) !important;
-}
-
-.sidebar .nav-link.active .badge {
-    background-color: rgba(26, 115, 232, 0.15) !important;
-    color: var(--google-blue) !important;
-}
-
-[data-theme="dark"] .sidebar .nav-link.active .badge {
-    background-color: rgba(138, 180, 248, 0.2) !important;
-    color: var(--google-blue) !important;
-}
-
-/* 3.5 Material Design 3 Status Pills / Chips */
-.nav-pills .nav-link {
-    border-radius: 100px !important;
-    padding: 6px 18px !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    color: var(--text-muted) !important;
-    background-color: transparent !important;
     border: 1px solid var(--border-color) !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    margin-right: 8px !important;
+    box-shadow: var(--card-shadow) !important;
+    border-radius: 16px !important;
 }
 
-.nav-pills .nav-link:hover {
-    background-color: var(--hover-bg) !important;
+.table {
+    background-color: transparent !important;
     color: var(--text-main) !important;
-    border-color: var(--text-muted) !important;
+    border-collapse: separate !important;
 }
 
-.nav-pills .nav-link.active {
-    background-color: var(--google-blue-tint) !important;
-    color: var(--google-blue) !important;
-    border-color: transparent !important;
+.table thead th {
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    font-weight: 700 !important;
+    padding: 10px 16px !important;
+    background-color: var(--table-header-bg) !important;
+    color: var(--text-muted) !important;
+    border-bottom: 1px solid var(--border-color) !important;
 }
 
-/* 4. Capsule Buttons (Material FAB styles) */
-.btn-primary, .btn-outline-primary, .btn-outline-secondary, .btn-outline-success, .btn-outline-danger {
-    border-radius: 100px !important; /* Full capsule look */
-    padding: 8px 24px !important;
-    font-weight: 600 !important;
+.table tbody td {
+    padding: 10px 16px !important;
+    border-bottom: 1px solid var(--border-color) !important;
     font-size: 0.88rem !important;
-    transition: all 0.2s ease;
+    background-color: transparent !important; /* Inherit from row */
 }
 
-.btn-primary {
-    background-color: var(--google-blue) !important;
-    border-color: var(--google-blue) !important;
-    color: #ffffff !important;
+.table-hover tbody tr:hover td {
+    background-color: var(--bg-hover) !important;
 }
 
-.btn-primary:hover {
-    background-color: var(--google-blue-hover) !important;
-    border-color: var(--google-blue-hover) !important;
-    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15) !important;
+/* Read Email Look (Printed rows) */
+tr.printed td {
+    background-color: rgba(0, 0, 0, 0.02) !important; /* Extremely subtle tint */
 }
 
-/* 5. Flat Tonal Cards & Stats Bar */
+[data-bs-theme="dark"] tr.printed td {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+tr.printed .patient-name-text {
+    font-weight: 400 !important;
+    color: var(--text-muted) !important;
+}
+
+tr.printed .badge:not(.badge-printed) {
+    opacity: 0.5;
+}
+
+/* 4. Statistics Dashboard Bar */
 .stat-card {
     border-radius: 12px !important;
     border: 1px solid var(--border-color) !important;
-    padding: 8px 12px !important;
+    padding: 10px 14px !important;
     background-color: var(--bg-surface) !important;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 12px !important;
     cursor: pointer !important;
 }
 
 .stat-card:hover {
-    background-color: var(--hover-bg) !important;
+    background-color: var(--bg-hover) !important;
     transform: translateY(-2px);
+    border-color: var(--google-blue) !important;
 }
 
 .stat-card.active {
     background-color: var(--google-blue-tint) !important;
     border-color: var(--google-blue) !important;
+    box-shadow: 0 0 0 1px var(--google-blue) !important;
 }
 
 .stat-card.active .stat-label {
-    color: var(--google-blue) !important;
-}
-
-/* Color codes based on Google material themes */
-.stat-card.stat-total {
-    background-color: var(--bg-surface) !important;
-    border-color: var(--border-color) !important;
-}
-.stat-card.stat-total .stat-icon {
-    background-color: rgba(26, 115, 232, 0.08) !important;
-    color: var(--google-blue) !important;
-}
-
-.stat-card.stat-pending {
-    background-color: var(--google-yellow-tint) !important;
-    border-color: var(--google-yellow-tint) !important;
-}
-.stat-card.stat-pending .stat-icon {
-    background-color: rgba(249, 171, 0, 0.12) !important;
-    color: var(--google-yellow) !important;
-}
-
-.stat-card.stat-completed {
-    background-color: var(--google-green-tint) !important;
-    border-color: var(--google-green-tint) !important;
-}
-.stat-card.stat-completed .stat-icon {
-    background-color: rgba(25, 135, 84, 0.12) !important;
-    color: var(--google-green) !important;
-}
-
-.stat-card.stat-not-printed {
-    background-color: var(--google-red-tint) !important;
-    border-color: var(--google-red-tint) !important;
-}
-.stat-card.stat-not-printed .stat-icon {
-    background-color: rgba(217, 48, 37, 0.12) !important;
-    color: var(--google-red) !important;
-}
-
-.stat-card.stat-printed {
-    background-color: var(--google-blue-tint) !important;
-    border-color: var(--google-blue-tint) !important;
-}
-.stat-card.stat-printed .stat-icon {
-    background-color: rgba(26, 115, 232, 0.12) !important;
     color: var(--google-blue) !important;
 }
 
@@ -291,22 +251,14 @@ tr:not(.printed) .patient-name-text {
     align-items: center !important;
     justify-content: center !important;
     font-size: 1rem !important;
-    flex-shrink: 0 !important;
-}
-
-.stat-card > div:last-child {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    flex-grow: 1 !important;
+    background-color: var(--bg-hover) !important;
+    color: var(--google-blue) !important;
 }
 
 .stat-label {
-    font-size: 0.75rem !important;
+    font-size: 0.72rem !important;
     font-weight: 700 !important;
     color: var(--text-muted) !important;
-    white-space: nowrap !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
 }
@@ -314,185 +266,203 @@ tr:not(.printed) .patient-name-text {
 .stat-value {
     font-size: 1.2rem !important;
     font-weight: 700 !important;
-    line-height: 1 !important;
-    margin-left: auto !important;
+    color: var(--text-main) !important;
 }
 
-/* Action Icons Sizing */
+/* 5. Interactive Elements */
 .btn-sm {
-    padding: 3px 6px !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    transition: all 0.15s ease !important;
+    border: 1px solid transparent !important;
 }
 
-.btn-sm i {
-    font-size: 0.78rem !important;
+.btn-sm:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-main) !important;
 }
 
-.gap-2 {
-    gap: 0.3rem !important;
-}
-
-#theme-toggle {
-    width: 32px !important;
-    height: 32px !important;
-}
-
-#theme-toggle i {
-    font-size: 0.95rem !important;
-}
-
-/* 6. Clean Table Formatting */
-.table {
-    border-collapse: separate !important;
-}
-.table thead th {
-    font-size: 0.75rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
-    font-weight: 700 !important;
-    padding: 14px 16px !important;
-    background-color: var(--table-header-bg) !important;
-    border-bottom: 1px solid var(--border-color) !important;
-}
-.table tbody td {
-    padding: 16px 16px !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    font-size: 0.88rem !important;
-}
-.table-hover tbody tr:hover td {
-    background-color: var(--hover-bg) !important;
-}
-
-/* Modern styling for printed rows (Read Email look) */
-tr.printed td {
-    background-color: #f2f6fc !important; /* Soft blue/grey tint for read status */
-}
-
-[data-theme="dark"] tr.printed td {
-    background-color: rgba(255, 255, 255, 0.04) !important;
-}
-
-tr.printed {
-    border-left: 4px solid transparent !important; /* Remove the blue indicator */
-}
-
-tr.printed .patient-name-text {
-    font-weight: 400 !important;
+.btn-outline-secondary {
     color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
 }
 
-tr.printed .badge:not(.badge-printed) {
-    opacity: 0.6;
+.btn-outline-secondary:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-main) !important;
+    border-color: var(--text-muted) !important;
 }
 
-/* 7. Rounded Custom Badges */
-.badge {
-    padding: 5px 12px !important;
-    font-weight: 600 !important;
-    font-size: 0.76rem !important;
+/* Pagination Overrides */
+[data-bs-theme="dark"] .pagination .page-link {
+    background-color: var(--bg-surface);
+    border-color: var(--border-color);
+    color: var(--text-muted);
 }
-.badge i {
-    font-size: 0.8rem !important;
+
+[data-bs-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: var(--google-blue);
+    border-color: var(--google-blue);
+    color: #0F172A; /* High-contrast dark text on light blue */
+    font-weight: 700;
 }
-.badge-pending {
-    background-color: var(--google-yellow-tint) !important;
-    color: var(--google-yellow) !important;
-    border: 1px solid var(--google-yellow-tint) !important;
+
+[data-bs-theme="dark"] .pagination .page-item.disabled .page-link {
+    background-color: var(--bg-body);
+    color: var(--bg-hover);
 }
-.badge-completed {
-    background-color: var(--google-green-tint) !important;
-    color: var(--google-green) !important;
-    border: 1px solid var(--google-green-tint) !important;
+
+/* Sidebar Active State */
+.sidebar .nav-link {
+    border-radius: 0 28px 28px 0 !important;
+    padding: 10px 24px !important;
+    color: var(--text-muted) !important;
+    transition: all 0.2s ease;
+    margin-right: 12px;
 }
-.badge-rejected {
-    background-color: var(--google-red-tint) !important;
-    color: var(--google-red) !important;
-    border: 1px solid var(--google-red-tint) !important;
+
+.sidebar .nav-link:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-main) !important;
 }
-.badge-printed {
+
+.sidebar .nav-link.active {
     background-color: var(--google-blue-tint) !important;
     color: var(--google-blue) !important;
-    border: 1px solid var(--google-blue-tint) !important;
-}
-
-/* 8. Collapsible Detail Sections */
-.test-details-row {
-    background-color: var(--hover-bg) !important;
-}
-.test-details-container {
-    padding: 20px 32px 20px 48px !important;
-    border-bottom: 1px solid var(--border-color);
-}
-.test-item {
-    border-bottom: 1px solid var(--border-color) !important;
-    padding: 10px 0 !important;
-}
-.test-name {
     font-weight: 600 !important;
 }
-.test-result {
-    font-weight: 700 !important;
-    color: var(--google-blue) !important;
+
+/* 6. Badges & Chips */
+.badge {
+    padding: 6px 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    border: 1px solid transparent !important;
 }
-.abnormal-indicator {
+
+.badge-pending, [data-bs-theme="dark"] .bg-warning-subtle {
+    background-color: var(--google-yellow-tint) !important;
+    color: var(--google-yellow) !important;
+    border: 1px solid rgba(251, 191, 36, 0.2) !important;
+}
+
+.badge-completed, [data-bs-theme="dark"] .bg-success-subtle {
+    background-color: var(--google-green-tint) !important;
+    color: var(--google-green) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+}
+
+.badge-rejected, [data-bs-theme="dark"] .bg-danger-subtle {
+    background-color: var(--google-red-tint) !important;
     color: var(--google-red) !important;
-    font-size: 1.1rem;
+    border: 1px solid rgba(248, 113, 113, 0.2) !important;
 }
 
-/* 9. Premium Modals */
-.modal-content {
-    border-radius: 20px !important;
-    border: none !important;
-    box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15) !important;
-}
-[data-theme="dark"] .modal-content {
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.5), 0 4px 16px 3px rgba(0,0,0,0.5) !important;
-}
-.modal-header {
-    padding: 24px 24px 8px 24px !important;
-}
-.modal-body {
-    padding: 24px !important;
+.badge-printed, [data-bs-theme="dark"] .bg-info-subtle {
+    background-color: var(--google-blue-tint) !important;
+    color: var(--google-blue) !important;
+    border: 1px solid rgba(96, 165, 250, 0.2) !important;
 }
 
-/* 10. Form Controls */
-.form-control, .form-select {
-    border-radius: 8px !important;
-    border: 1px solid var(--border-color) !important;
-    padding: 10px 14px !important;
-    font-size: 0.92rem !important;
+/* 7. Search Container (Google Style) */
+.search-container {
+    max-width: 680px !important;
+    flex-grow: 1;
+    margin: 0 auto !important;
 }
-.form-control:focus, .form-select:focus {
+
+.search-container .input-group {
+    background-color: var(--bg-hover) !important;
+    border: 1px solid transparent !important;
+    border-radius: 28px !important;
+    padding: 2px 12px !important;
+    transition: all 0.2s ease;
+}
+
+.search-container .input-group:focus-within {
+    background-color: var(--bg-surface) !important;
     border-color: var(--google-blue) !important;
-    box-shadow: 0 0 0 3px var(--google-blue-tint) !important;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1) !important;
 }
 
-/* Theme Icon transitions */
-#theme-toggle i {
-    font-size: 1.1rem;
-    transition: transform 0.3s ease;
-}
-#theme-toggle:hover i {
-    transform: rotate(20deg);
+/* 8. Modals & Forms */
+.modal-content {
+    background-color: var(--bg-surface) !important;
+    border-radius: 24px !important;
+    border: 1px solid var(--border-color) !important;
 }
 
-/* Scrollbar customization */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.form-control, .form-select {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 10px !important;
 }
-::-webkit-scrollbar-track {
-    background: transparent;
+
+.form-control:focus {
+    border-color: var(--google-blue) !important;
+    box-shadow: 0 0 0 4px var(--google-blue-tint) !important;
 }
+
+/* 9. Upload Component */
+.upload-card-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-card {
+    width: 100%; max-width: 500px;
+}
+
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: var(--bg-body);
+    transition: all 0.2s ease;
+}
+
+.upload-area:hover {
+    border-color: var(--google-blue);
+    background-color: var(--google-blue-tint);
+}
+
+/* 10. PDF Viewer Toolbar */
+.toolbar {
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 0;
+    box-shadow: var(--card-shadow);
+}
+
+/* 11. Collapsible Details (High Contrast Fix) */
+.test-details-row {
+    background-color: var(--bg-body) !important;
+}
+
+.test-group-header {
+    background-color: var(--bg-hover) !important;
+    color: var(--google-blue) !important;
+    padding: 8px 16px !important;
+    font-weight: 600 !important;
+}
+
+.test-item {
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 12px 16px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.15);
-    border-radius: 4px;
+    background: var(--bg-hover);
+    border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(0,0,0,0.3);
-}
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.15);
-}
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.3);
-}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
