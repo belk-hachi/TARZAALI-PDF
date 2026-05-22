@@ -61,6 +61,33 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
+                        <label class="form-label text-muted small">Nom du Laboratoire (En-tête)</label>
+                        <input type="text" id="lab_dr_name" class="form-control" placeholder="Ex: IBN SINA. Dr N.KACI">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Adresse Ligne 1</label>
+                        <input type="text" id="lab_addr_l1" class="form-control" placeholder="Boulevard...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Adresse Ligne 2</label>
+                        <input type="text" id="lab_addr_l2" class="form-control" placeholder="Ville/Mosquée...">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small">Téléphone</label>
+                            <input type="text" id="lab_tel" class="form-control" placeholder="027902479">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small">Fax</label>
+                            <input type="text" id="lab_fax" class="form-control" placeholder="027902479">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Mobile</label>
+                        <input type="text" id="lab_mobile" class="form-control" placeholder="0671013704">
+                    </div>
+                    <hr>
+                    <div class="mb-3">
                         <label class="form-label text-muted small">Clé API Google Gemini</label>
                         <input type="password" id="api_key_input" class="form-control" placeholder="Entrez votre clé API ici...">
                     </div>
@@ -886,7 +913,13 @@
                 api_key: document.getElementById('api_key_input').value,
                 model: document.getElementById('model-select').value,
                 online_username: document.getElementById('online_username').value,
-                online_password: document.getElementById('online_password').value
+                online_password: document.getElementById('online_password').value,
+                lab_dr_name: document.getElementById('lab_dr_name').value,
+                lab_addr_l1: document.getElementById('lab_addr_l1').value,
+                lab_addr_l2: document.getElementById('lab_addr_l2').value,
+                lab_tel: document.getElementById('lab_tel').value,
+                lab_fax: document.getElementById('lab_fax').value,
+                lab_mobile: document.getElementById('lab_mobile').value
             };
             fetch('/api/config', {
                 method: 'POST',
@@ -993,11 +1026,23 @@
                             const apiKeyInput = document.getElementById('api_key_input');
                             const usernameInput = document.getElementById('online_username');
                             const passwordInput = document.getElementById('online_password');
+                            const drNameInput = document.getElementById('lab_dr_name');
+                            const addrL1Input = document.getElementById('lab_addr_l1');
+                            const addrL2Input = document.getElementById('lab_addr_l2');
+                            const telInput = document.getElementById('lab_tel');
+                            const faxInput = document.getElementById('lab_fax');
+                            const mobileInput = document.getElementById('lab_mobile');
                             const select = document.getElementById('model-select');
                             
                             if (apiKeyInput) apiKeyInput.value = data.api_key || '';
                             if (usernameInput) usernameInput.value = data.online_username || '';
                             if (passwordInput) passwordInput.value = data.online_password || '';
+                            if (drNameInput) drNameInput.value = data.lab_dr_name || '';
+                            if (addrL1Input) addrL1Input.value = data.lab_addr_l1 || '';
+                            if (addrL2Input) addrL2Input.value = data.lab_addr_l2 || '';
+                            if (telInput) telInput.value = data.lab_tel || '';
+                            if (faxInput) faxInput.value = data.lab_fax || '';
+                            if (mobileInput) mobileInput.value = data.lab_mobile || '';
                             
                             if (select) {
                                 const modelMap = {

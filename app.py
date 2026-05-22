@@ -70,7 +70,13 @@ def load_config():
         "api_key": "", 
         "model": "gemini-2.5-flash",
         "online_username": "",
-        "online_password": ""
+        "online_password": "",
+        "lab_dr_name": "IBN SINA. Dr N.KACI",
+        "lab_addr_l1": "Boulevard Amir Abdelkader, Cité nouvelle",
+        "lab_addr_l2": "mosquée 205 N°1 et 2. DJELFA",
+        "lab_tel": "027902479",
+        "lab_fax": "027902479",
+        "lab_mobile": "0671013704"
     }
     
     # 1. Try to load from config.json
@@ -284,60 +290,63 @@ def call_ai_for_extraction(pdf_path, prompt, model_name=None):
 
 
 def generate_patient_pdf(patient, list_info, source_pdf_path=None, cijoint_pages=None, custom_filename=None):
-    """Generate a PDF for a single patient using generate_pdf.py.
-    If cijoint_pages is provided and source_pdf_path exists, those pages
-    from the original uploaded PDF are appended to the generated report.
-    Returns the filename of the saved PDF."""
+    """Generate a PDF for a single patient using generate_pdf.py."""
 
     from generate_pdf import generate_pdf
     from io import BytesIO
 
+    # Fetch configuration for dynamic lab info
+    config = load_config()
+    lab_config = {
+        "lab_dr_name": config.get("lab_dr_name"),
+        "lab_addr_l1": config.get("lab_addr_l1"),
+        "lab_addr_l2": config.get("lab_addr_l2"),
+        "lab_tel": config.get("lab_tel"),
+        "lab_fax": config.get("lab_fax"),
+        "lab_mobile": config.get("lab_mobile"),
+        "email": config.get("email", "info.tarzaali@gmail.com"),
+        "lab_name": config.get("lab_name", "LABORATOIRE D'ANALYSES DE BIOLOGIE MEDICALE"),
+        "prof_name": config.get("prof_name", "Professeur Abdelaziz TARZAALI")
+    }
+
     last_name = patient.get("lastName", "unknown")
     first_name = patient.get("firstName", "unknown")
     sample_date = patient.get("sampleDate", "")
-    # Convert "06/05/2026 08:23:10" to "06052026082310"
     date_suffix = re.sub(r'[^0-9]', '', sample_date)
 
-    # Step 1: Generate the report PDF (returns a BytesIO)
-    report_bytes = generate_pdf(patient, list_info, logo_path=LOGO_PATH)
+    # Step 1: Generate the report PDF
+    report_bytes = generate_pdf(patient, list_info, logo_path=LOGO_PATH, lab_config=lab_config)
 
     # Step 2: Merge ci-joint pages if needed
     if cijoint_pages and source_pdf_path and os.path.exists(source_pdf_path):
         try:
             writer = PdfWriter()
-
-            # Add all pages from the generated report
             report_bytes.seek(0)
             reader_report = PdfReader(report_bytes)
             for page in reader_report.pages:
                 writer.add_page(page)
 
-            # Add the specific ci-joint pages from the source PDF
             reader_source = PdfReader(source_pdf_path)
             total_source_pages = len(reader_source.pages)
 
             for page_num in cijoint_pages:
-                idx = page_num - 1  # convert 1-based page number to 0-based index
+                idx = page_num - 1
                 if 0 <= idx < total_source_pages:
                     writer.add_page(reader_source.pages[idx])
-                    print(f"[PDF] Appended ci-joint source page {page_num} for {last_name} {first_name}")
-                else:
-                    print(f"[PDF] WARNING: ciJointPage {page_num} out of range (source has {total_source_pages} pages)")
-
+            
             merged = BytesIO()
             writer.write(merged)
             merged.seek(0)
             final_bytes = merged
-
         except Exception as e:
-            print(f"[PDF] ERROR merging ci-joint pages: {e}. Using report-only PDF.")
+            print(f"[PDF] ERROR merging ci-joint pages: {e}")
             report_bytes.seek(0)
             final_bytes = report_bytes
     else:
         report_bytes.seek(0)
         final_bytes = report_bytes
 
-    # Step 3: Save final PDF to disk
+    # Step 3: Save final PDF
     if custom_filename:
         filename = custom_filename
     else:
@@ -348,7 +357,6 @@ def generate_patient_pdf(patient, list_info, source_pdf_path=None, cijoint_pages
     with open(filepath, "wb") as f:
         f.write(final_bytes.read())
 
-    print(f"[PDF] Saved: {filename}")
     return filename
 
 
@@ -977,7 +985,15 @@ def online_results(liste_id):
 def config_endpoint():
     if request.method == "POST":
         data = request.json
-        save_config(data)
+        # Extract lab fields and update config
+        config = load_config()
+        fields = ["api_key", "model", "online_username", "online_password", 
+                  "lab_dr_name", "lab_addr_l1", "lab_addr_l2", "lab_tel", "lab_fax", "lab_mobile"]
+        for f in fields:
+            if f in data:
+                config[f] = data[f]
+        
+        save_config(config)
         return jsonify({"success": True})
     return jsonify(load_config())
 

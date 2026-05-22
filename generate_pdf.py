@@ -245,7 +245,8 @@ class HeaderDrawer:
         self.theme = theme
         self.fonts = fonts
 
-    def draw(self, canvas_obj, list_info, logo_path=None):
+    def draw(self, canvas_obj, list_info, logo_path=None, lab_config=None):
+        if not lab_config: lab_config = self.cfg.LAB_INFO
         canvas_obj.saveState()
 
         x_left = self.cfg.TABLE_LEFT_MARGIN + 2
@@ -253,10 +254,10 @@ class HeaderDrawer:
         x_center = x_left + self.cfg.TOTAL_WIDTH / 2
         y_top = self.cfg.PAGE_H - 6
 
-        self._draw_logo_and_title(canvas_obj, x_left, x_center, y_top, logo_path)
-        self._draw_contact_info(canvas_obj, x_left, x_right, y_top)
+        self._draw_logo_and_title(canvas_obj, x_left, x_center, y_top, logo_path, lab_config)
+        self._draw_contact_info(canvas_obj, x_left, x_right, y_top, lab_config)
         y_grid = self._draw_document_header(canvas_obj, x_center, y_top)
-        self._draw_info_grid(canvas_obj, x_left, x_right, y_grid, list_info)
+        self._draw_info_grid(canvas_obj, x_left, x_right, y_grid, list_info, lab_config)
         self._draw_column_headers(canvas_obj, x_left, self.cfg.PAGE_H - self.cfg.HEADER_MARGIN)
 
         canvas_obj.restoreState()
@@ -282,7 +283,7 @@ class HeaderDrawer:
         canvas_obj.setStrokeColor(colors.black)
         canvas_obj.line(x_left, line_y, x_left + self.cfg.TOTAL_WIDTH, line_y)
 
-    def _draw_logo_and_title(self, canvas_obj, x_left, x_center, y_top, logo_path):
+    def _draw_logo_and_title(self, canvas_obj, x_left, x_center, y_top, logo_path, lab_config):
         logo_w, logo_h = 75, 61.5
         if logo_path and os.path.exists(logo_path):
             canvas_obj.drawImage(
@@ -293,20 +294,19 @@ class HeaderDrawer:
             )
 
         canvas_obj.setFont(self.fonts["BOLD"], 12)
-        canvas_obj.drawCentredString(x_center, y_top - 18, self.cfg.LAB_INFO["lab_name"])
+        canvas_obj.drawCentredString(x_center, y_top - 18, lab_config.get("lab_name", self.cfg.LAB_INFO["lab_name"]))
 
         canvas_obj.setFont(self.fonts["NORMAL"], 11)
-        canvas_obj.drawCentredString(x_center, y_top - 34, self.cfg.LAB_INFO["prof_name"])
+        canvas_obj.drawCentredString(x_center, y_top - 34, lab_config.get("prof_name", self.cfg.LAB_INFO["prof_name"]))
 
-    def _draw_contact_info(self, canvas_obj, x_left, x_right, y_top):
+    def _draw_contact_info(self, canvas_obj, x_left, x_right, y_top, lab_config):
         canvas_obj.setFont(self.fonts["NORMAL"], 9)
         phone_x = x_left + 120
 
-        canvas_obj.drawString(phone_x, y_top - 62, "+213 28 409 910  / +213 28 419 190")
-        canvas_obj.drawString(phone_x, y_top - 72, "+213 20 486 569  / +213 20 486 075")
-        canvas_obj.drawString(phone_x, y_top - 82, "+213 5 55 00 53 96")
+        canvas_obj.drawString(phone_x, y_top - 62, f"Tel: {lab_config['lab_tel']}  / Fax: {lab_config['lab_fax']}")
+        canvas_obj.drawString(phone_x, y_top - 72, f"Mobile: {lab_config['lab_mobile']}")
 
-        canvas_obj.drawRightString(x_right, y_top - 62, self.cfg.LAB_INFO["email"])
+        canvas_obj.drawRightString(x_right, y_top - 62, lab_config.get("email", self.cfg.LAB_INFO["email"]))
 
     def _draw_document_header(self, canvas_obj, x_center, y_top):
         y_title = y_top - 100
@@ -321,7 +321,7 @@ class HeaderDrawer:
 
         return y_title - 20
 
-    def _draw_info_grid(self, canvas_obj, x_left, x_right, y_grid, list_info):
+    def _draw_info_grid(self, canvas_obj, x_left, x_right, y_grid, list_info, lab_config):
         fs, ls = 8.5, 13
         key_x = x_left + 22
         val_x = key_x + canvas_obj.stringWidth("Liste du :", self.fonts["ITALIC"], fs) + 5
@@ -329,11 +329,11 @@ class HeaderDrawer:
         col3_x = x_left + 275 + canvas_obj.stringWidth(" " * 30, self.fonts["NORMAL"], fs)
 
         rows = [
-            ("N°Fax", self.cfg.LAB_INFO["fax"], self.cfg.LAB_INFO["mobiles"][0],
-             ("Adresse au laboratoire   ", self.cfg.LAB_INFO["dr_name"])),
+            ("N°Fax", lab_config["lab_fax"], lab_config["lab_mobile"],
+             ("Adresse au laboratoire   ", lab_config["lab_dr_name"])),
 
-            ("N°Tel", self.cfg.LAB_INFO["tel"], None, self.cfg.LAB_INFO["addr_l1"]),
-            ("Liste", f"{list_info.get('listNumber', 'UNKNOWN')}", None, self.cfg.LAB_INFO["addr_l2"]),
+            ("N°Tel", lab_config["lab_tel"], None, lab_config["lab_addr_l1"]),
+            ("Liste", f"{list_info.get('listNumber', 'UNKNOWN')}", None, lab_config["lab_addr_l2"]),
             ("Liste du :", list_info.get("listeDate", ""), None, None),
         ]
 
@@ -572,11 +572,7 @@ class TestTableBuilder:
 # 7. Main Generator
 # ==========================================================
 
-def generate_pdf(
-    patient: Dict[str, Any],
-    list_info: Dict[str, Any],
-    logo_path: Optional[str] = None
-) -> BytesIO:
+def generate_pdf(patient, list_info, logo_path=None, lab_config=None):
     cfg = PDFConfig()
     theme = Theme()
     fonts = get_fonts()
@@ -614,7 +610,7 @@ def generate_pdf(
     template = PageTemplate(
         id="main",
         frames=[frame],
-        onPage=lambda c, d: header_drawer.draw(c, list_info, logo_path),
+        onPage=lambda c, d: header_drawer.draw(c, list_info, logo_path, lab_config),
         onPageEnd=draw_border
     )
 

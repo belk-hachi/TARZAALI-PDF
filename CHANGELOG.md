@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-22] - Dynamic Laboratory Configuration
+
+### Added
+- **Dynamic Lab Information**: Introduced new configuration fields for laboratory details (Dr. Name, Address, Phone, Fax, Mobile) in the settings interface.
+- **Configurable PDF Header**: The PDF generator now dynamically pulls contact/address information from `config.json` instead of using hardcoded defaults.
+- **Enhanced Settings UI**: Added dedicated inputs in the settings modal to manage lab profile information.
+
 ## [2026-05-22] - High-Quality Slate Dark Mode & High-Density UI
 
 ### Added
