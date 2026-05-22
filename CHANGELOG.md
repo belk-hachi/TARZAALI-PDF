@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-22] - Google Material 3 UI Revamp & Interactive Filters
+
+### Added
+- **Interactive Stats Cards**: The statistics dashboard cards are now clickable links that instantly filter the patient list.
+- **"Traité" (Printed) Filter**: Added full backend and frontend support for filtering the patient list by processed status.
+- **"Read Email" Row Styling**: Processed patient rows now adopt a "read" state with normal font weight and a subtle background tint, mimicking a modern inbox.
+
+### Changed
+- **Google Roboto Typography**: Switched the primary application font to Roboto for a cleaner, more professional Google-style aesthetic.
+- **Compact Layout Overhaul**: 
+    - Redesigned statistics cards into a horizontal, space-efficient layout.
+    - Reduced action icon and button sizes for a more professional "high-density" UI.
+    - Tightened sidebar and topbar spacing to maximize content area.
+- **Merged Filters & Stats**: Replaced the separate status tabs with the interactive stats bar for a more intuitive and unified navigation experience.
+- **Refined Badges**: Shrunk icons inside status badges to match the new compact design.
+
 ## [2026-05-21] - Dark Mode, "Non Traité" Filter & UI Polish
 
 ### Added
