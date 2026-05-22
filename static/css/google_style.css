@@ -263,18 +263,30 @@ tr.printed .badge:not(.badge-printed) {
     color: var(--google-blue) !important;
 }
 
+.stat-content {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-grow: 1 !important;
+    overflow: hidden !important;
+}
+
 .stat-label {
     font-size: 0.72rem !important;
     font-weight: 700 !important;
     color: var(--text-muted) !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
+    white-space: nowrap !important;
+    margin-right: 8px !important;
 }
 
 .stat-value {
     font-size: 1.2rem !important;
     font-weight: 700 !important;
     color: var(--text-main) !important;
+    white-space: nowrap !important;
 }
 
 /* 5. Interactive Elements */
