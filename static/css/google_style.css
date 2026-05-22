@@ -2,7 +2,7 @@
    TARZALI-PDF: Google Material Design 3 Revamp Stylesheet
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
 :root {
     --google-blue: #1a73e8;
@@ -18,7 +18,7 @@
     --google-red: #d93025;
     --google-red-tint: #fce8e6;
 
-    --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-primary: 'Roboto', system-ui, -apple-system, sans-serif;
 }
 
 [data-theme="dark"] {
@@ -39,10 +39,38 @@
 /* 1. Global Typography Reset */
 body, input, select, textarea, button, .table, .modal-title, .nav-link {
     font-family: var(--font-primary) !important;
-    letter-spacing: -0.01em !important;
+    letter-spacing: 0.01em !important;
+    font-size: 0.94rem !important;
+}
+
+.patient-name-text {
+    font-family: 'Roboto', sans-serif !important;
+    font-size: 1rem !important;
+    transition: all 0.2s ease;
+}
+
+/* Unread (Not Traité) state */
+tr:not(.printed) .patient-name-text {
+    font-weight: 700 !important;
+    color: var(--text-main) !important;
 }
 
 /* 2. Topbar Gmail-Style Search Box */
+.topbar .btn {
+    padding: 5px 14px !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+}
+
+.topbar .btn i {
+    font-size: 0.8rem !important;
+}
+
+.search-container .bi-search {
+    font-size: 0.95rem !important;
+    color: var(--text-muted) !important;
+}
+
 .search-container {
     max-width: 680px !important;
     flex-grow: 1;
@@ -99,9 +127,9 @@ body, input, select, textarea, button, .table, .modal-title, .nav-link {
 }
 
 .sidebar .nav-link i {
-    font-size: 1.1rem;
+    font-size: 0.95rem !important;
     margin-right: 10px;
-    vertical-align: -2px;
+    vertical-align: -1px;
 }
 
 .sidebar .nav-link:hover {
@@ -184,12 +212,14 @@ body, input, select, textarea, button, .table, .modal-title, .nav-link {
 
 /* 5. Flat Tonal Cards & Stats Bar */
 .stat-card {
-    border-radius: 16px !important; /* Organic, rounded card shape */
+    border-radius: 12px !important;
     border: 1px solid var(--border-color) !important;
-    box-shadow: none !important; /* Minimal elevation */
-    padding: 14px 18px !important;
+    padding: 8px 12px !important;
     background-color: var(--bg-surface) !important;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: all 0.2s ease;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
 }
 
 /* Color codes based on Google material themes */
@@ -239,19 +269,60 @@ body, input, select, textarea, button, .table, .modal-title, .nav-link {
 }
 
 .stat-icon {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 12px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1rem !important;
+    flex-shrink: 0 !important;
+}
+
+.stat-card > div:last-child {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-grow: 1 !important;
 }
 
 .stat-label {
-    font-size: 0.72rem !important;
-    letter-spacing: 0.05em !important;
+    font-size: 0.75rem !important;
     font-weight: 700 !important;
+    color: var(--text-muted) !important;
+    white-space: nowrap !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
 }
 
 .stat-value {
-    font-size: 1.4rem !important;
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    margin-left: auto !important;
+}
+
+/* Action Icons Sizing */
+.btn-sm {
+    padding: 3px 6px !important;
+}
+
+.btn-sm i {
+    font-size: 0.78rem !important;
+}
+
+.gap-2 {
+    gap: 0.3rem !important;
+}
+
+#theme-toggle {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+#theme-toggle i {
+    font-size: 0.95rem !important;
 }
 
 /* 6. Clean Table Formatting */
@@ -276,15 +347,26 @@ body, input, select, textarea, button, .table, .modal-title, .nav-link {
     background-color: var(--hover-bg) !important;
 }
 
-/* Modern styling for printed rows */
+/* Modern styling for printed rows (Read Email look) */
 tr.printed td {
-    background-color: rgba(26, 115, 232, 0.02) !important;
+    background-color: #f2f6fc !important; /* Soft blue/grey tint for read status */
 }
+
 [data-theme="dark"] tr.printed td {
-    background-color: rgba(138, 180, 248, 0.02) !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
 }
+
 tr.printed {
-    border-left: 4px solid var(--google-blue) !important;
+    border-left: 4px solid transparent !important; /* Remove the blue indicator */
+}
+
+tr.printed .patient-name-text {
+    font-weight: 400 !important;
+    color: var(--text-muted) !important;
+}
+
+tr.printed .badge:not(.badge-printed) {
+    opacity: 0.6;
 }
 
 /* 7. Rounded Custom Badges */
@@ -292,6 +374,9 @@ tr.printed {
     padding: 5px 12px !important;
     font-weight: 600 !important;
     font-size: 0.76rem !important;
+}
+.badge i {
+    font-size: 0.8rem !important;
 }
 .badge-pending {
     background-color: var(--google-yellow-tint) !important;

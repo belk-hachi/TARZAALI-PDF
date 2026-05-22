@@ -380,8 +380,8 @@
                                 <td class="ps-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#details-{{ patient.id }}">
                                     <div class="d-flex align-items-center">
                                         <div>
-                                            <div class="fw-bold d-flex align-items-center gap-2">
-                                                <span class="patient-name-text fw-bold">{{ patient.last_name }} {{ patient.first_name }}</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="patient-name-text">{{ patient.last_name }} {{ patient.first_name }}</span>
                                                 
                                                 {# Check for Ci-Joint #}
                                                 {% set ns = namespace(has_ci_joint=false) %}
@@ -457,24 +457,24 @@
                                     </div>
                                 </td>
                                 <td class="pe-4">
-                                    <div class="d-flex justify-content-end gap-2">
+                                    <div class="d-flex justify-content-end">
                                         {% if not patient.printed_at %}
-                                        <button onclick="markAsPrinted({{ patient.id }}, this)" class="btn btn-sm btn-outline-secondary" title="Marquer comme traité">
+                                        <button onclick="markAsPrinted({{ patient.id }}, this)" class="btn btn-sm btn-outline-secondary ms-1" title="Marquer comme traité">
                                             <i class="bi bi-patch-check"></i>
                                         </button>
                                         {% else %}
-                                        <button onclick="unmarkAsPrinted({{ patient.id }}, this)" class="btn btn-sm badge-printed border-0 d-flex align-items-center gap-1" title="Cliquer pour annuler le traitement">
+                                        <button onclick="unmarkAsPrinted({{ patient.id }}, this)" class="btn btn-sm badge-printed border-0 d-flex align-items-center gap-1 ms-1" title="Cliquer pour annuler le traitement">
                                             <i class="bi bi-check-lg"></i> Traité
                                         </button>
                                         {% endif %}
                                         
-                                        <a href="{{ url_for('view_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary" title="Voir PDF">
+                                        <a href="{{ url_for('view_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary ms-1" title="Voir PDF">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ url_for('download_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary" title="Télécharger">
+                                        <a href="{{ url_for('download_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Télécharger">
                                             <i class="bi bi-download"></i>
                                         </a>
-                                        <form action="{{ url_for('delete_patient_route', patient_id=patient.id) }}" method="POST" onsubmit="return confirm('Supprimer ce dossier patient ?');">
+                                        <form action="{{ url_for('delete_patient_route', patient_id=patient.id) }}" method="POST" onsubmit="return confirm('Supprimer ce dossier patient ?');" class="d-inline ms-1">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
                                                 <i class="bi bi-trash"></i>
                                             </button>
