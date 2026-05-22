@@ -613,7 +613,10 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ notes: notes })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Network response was not ok');
+                return res.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Show feedback
@@ -624,29 +627,35 @@
 
                     // Update the badge on the name cell
                     const row = document.querySelector(`tr[data-patient-id="${patientId}"]`);
-                    const nameContainer = row.querySelector('.fw-bold.d-flex');
-                    let badge = nameContainer.querySelector('.notes-badge');
+                    // Adjusted selector to find patient-name-text wrapper correctly
+                    const nameCell = row.querySelector('td:first-child .d-flex.align-items-center > div');
+                    let badge = nameCell.querySelector('.notes-badge');
                     
                     if (notes.trim()) {
                         if (!badge) {
                             badge = document.createElement('span');
-                            badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill notes-badge';
+                            badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill notes-badge ms-2';
                             badge.style.fontSize = '0.65rem';
                             badge.style.padding = '0.2rem 0.5rem';
                             badge.textContent = '📝';
-                            nameContainer.appendChild(badge);
+                            // Append next to patient name text
+                            nameCell.querySelector('.patient-name-text').after(badge);
                         }
                         badge.title = notes.trim();
                     } else {
                         // Note was cleared
                         if (badge) badge.remove();
                     }
+                } else {
+                    throw new Error('Server returned failure');
                 }
             })
-            .catch(() => {
+            .catch(err => {
+                console.error("Save note error:", err);
                 feedback.textContent = '✗ Erreur lors de la sauvegarde';
                 feedback.style.color = '#dc3545';
                 feedback.style.display = 'block';
+                setTimeout(() => { feedback.style.display = 'none'; }, 3000);
             });
         }
 
