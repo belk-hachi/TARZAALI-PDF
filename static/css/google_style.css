@@ -20,8 +20,9 @@
     --font-primary: system-ui, -apple-system, sans-serif;
 
     /* Layout Variables */
-    --sidebar-width: 250px;
+    --sidebar-width: 220px;
     --topbar-height: 64px;
+    --content-padding-x: 10px;
     
     /* Light Theme Palette (Layered Hierarchy) */
     --bg-body: #f8f9fa;      /* Layer 0 */
@@ -153,7 +154,7 @@ tr:not(.printed) .patient-name-text {
 .main-content {
     margin-left: var(--sidebar-width);
     margin-top: var(--topbar-height);
-    padding: 1.5rem 2rem;
+    padding: 1.5rem var(--content-padding-x);
 }
 
 .page-title {
