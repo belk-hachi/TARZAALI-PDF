@@ -12,6 +12,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2026-05-23] - UI Refactoring & Maintenance Enhancements
+
+### Fixed
+- **Dashboard BuildError**: Resolved a critical `werkzeug.routing.exceptions.BuildError` by updating all `url_for` calls in templates to use correct blueprint-prefixed endpoints (e.g., `dashboard.dashboard`).
+- **Enforced Uppercase Names**: Updated both the database layer (`save_extraction_result`, `update_patient_identity`) and the route layer to ensure both First Name and Last Name are consistently saved in uppercase.
+- **Path Standardization**: Refactored hardcoded paths in `upload.html` and `viewer.html` to use Flask's `url_for` for better reliability and blueprint compatibility.
+
+### Changed
+- **Relocated Backup Functionality**: Moved the manual backup button from the dashboard header to a new "Maintenance" tab within the Settings modal to declutter the main UI.
+- **Adjusted Backup Frequency**: Changed the automatic background backup interval from 30 minutes to **once every 24 hours** to reduce system overhead.
+- **Enhanced Theme Toggle**: Increased the size of the light/dark mode icon and container for better visibility and easier interaction.
+
+---
+
 ## [2026-05-22] - Dynamic Laboratory Configuration
 
 ### Added

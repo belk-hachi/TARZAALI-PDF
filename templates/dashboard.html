@@ -45,9 +45,6 @@
             <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#uploadModal">
                 <i class="bi bi-plus-lg"></i> Nouvel Upload
             </button>
-            <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="triggerBackup(this)" title="Créer une sauvegarde">
-                <i class="bi bi-safe"></i> Sauvegarder
-            </button>
             <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
                 <i class="bi bi-gear"></i> Paramètres
             </button>
@@ -72,6 +69,9 @@
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-lab" type="button">Laboratoire</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-maintenance" type="button">Maintenance</button>
                         </li>
                     </ul>
                     <div class="tab-content" id="settingsTabContent">
@@ -131,6 +131,17 @@
                             <div class="mb-3">
                                 <label class="form-label text-muted small">Mobile</label>
                                 <input type="text" id="lab_mobile" class="form-control" placeholder="0671013704">
+                            </div>
+                        </div>
+                        <!-- Maintenance Tab -->
+                        <div class="tab-pane fade" id="tab-maintenance">
+                            <div class="p-3 bg-light rounded-3 text-center mb-3">
+                                <i class="bi bi-safe fs-1 text-primary mb-2"></i>
+                                <h6 class="fw-bold">Sauvegarde de la Base de Données</h6>
+                                <p class="small text-muted mb-3">Créez une copie de sécurité manuelle de vos données.</p>
+                                <button type="button" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2" onclick="triggerBackup(this)">
+                                    <i class="bi bi-cloud-arrow-up-fill"></i> Lancer la Sauvegarde
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1061,7 +1072,7 @@
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Sauvegarde...';
-            fetch('/api/backup', { method: 'POST' })
+            fetch("{{ url_for('api.trigger_backup') }}", { method: 'POST' })
                 .then(res => res.json())
                 .then(data => {
                     btn.disabled = false;
@@ -1134,7 +1145,7 @@
             const settingsModal = document.getElementById('settingsModal');
             if (settingsModal) {
                 settingsModal.addEventListener('show.bs.modal', function () {
-                    fetch('/api/config')
+                    fetch("{{ url_for('api.config_endpoint') }}")
                         .then(res => res.json())
                         .then(data => {
                             const apiKeyInput = document.getElementById('api_key_input');
@@ -1248,7 +1259,7 @@
                         setTimeout(() => { if (xhr.readyState < 4) { setModalStep('m-step-processing', 'completed'); setModalStep('m-step-final', 'active'); } }, 10000);
                     };
 
-                    xhr.open('POST', '/upload', true);
+                    xhr.open('POST', "{{ url_for('upload.upload') }}", true);
                     xhr.send(formData);
                 };
             }

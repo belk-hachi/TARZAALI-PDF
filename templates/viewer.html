@@ -43,11 +43,11 @@
                 </button>
                 {% if not is_source %}
                     {% if session_id == 'partial' %}
-                        <a href="/download-partial/{{ pdf_filename }}" class="btn btn-primary btn-sm btn-action">
+                        <a href="{{ url_for('patient.download_partial_pdf', filename=pdf_filename) }}" class="btn btn-primary btn-sm btn-action">
                             <i class="bi bi-download"></i> Télécharger
                         </a>
                     {% elif session_id == 'db' %}
-                        <a href="/download-db/{{ patient_index }}" class="btn btn-primary btn-sm btn-action">
+                        <a href="{{ url_for('patient.download_patient_db', patient_id=patient_index) }}" class="btn btn-primary btn-sm btn-action">
                             <i class="bi bi-download"></i> Télécharger
                         </a>
                     {% endif %}
@@ -57,7 +57,7 @@
     </div>
 
     <div class="pdf-container">
-        <iframe id="pdf-frame" class="pdf-frame" src="{% if is_source %}/source-pdf/{{ pdf_filename }}{% else %}/pdf/{{ pdf_filename }}{% endif %}"></iframe>
+        <iframe id="pdf-frame" class="pdf-frame" src="{% if is_source %}{{ url_for('main.serve_source_pdf', filename=pdf_filename) }}{% else %}{{ url_for('main.serve_pdf', filename=pdf_filename) }}{% endif %}"></iframe>
     </div>
 
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
@@ -87,7 +87,7 @@
 
         function printPdf() {
             const frame = document.getElementById('pdf-frame');
-            const pdfUrl = "{% if is_source %}/source-pdf/{{ pdf_filename }}{% else %}/pdf/{{ pdf_filename }}{% endif %}";
+            const pdfUrl = "{% if is_source %}{{ url_for('main.serve_source_pdf', filename=pdf_filename) }}{% else %}{{ url_for('main.serve_pdf', filename=pdf_filename) }}{% endif %}";
             if (frame.contentWindow) {
                 frame.contentWindow.focus();
                 frame.contentWindow.print();

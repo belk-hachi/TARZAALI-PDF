@@ -531,6 +531,27 @@ tr.printed .badge:not(.badge-printed) {
     align-items: center;
 }
 
+/* 12. Theme Toggle Styling */
+#theme-toggle {
+    cursor: pointer;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    color: var(--text-main);
+}
+
+#theme-toggle:hover {
+    background-color: var(--bg-hover);
+}
+
+#theme-toggle i {
+    font-size: 1.4rem !important;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }

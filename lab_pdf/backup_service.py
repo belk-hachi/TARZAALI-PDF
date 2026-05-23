@@ -24,7 +24,7 @@ from .config import DB_PATH, CONFIG_FILE, UPLOAD_DIR, BACKUP_DIR, app_config
 logger = logging.getLogger(__name__)
 
 DEFAULT_MAX_BACKUPS = 10
-DEFAULT_INTERVAL_SECONDS = 1800  # 30 minutes
+DEFAULT_INTERVAL_SECONDS = 86400  # 24 hours (86400 seconds)
 
 
 def create_backup():
@@ -52,6 +52,10 @@ def create_backup():
             shutil.copy2(CONFIG_FILE, os.path.join(backup_dir, "config.json"))
 
         # 3. Backup uploads folder
+        # NOTE: dirs_exist_ok requires Python 3.8+ (guaranteed by
+        # Flask 3.0 dependency). Do NOT remove this parameter — without
+        # it, copytree fails if the uploads subdirectory already exists
+        # from a previous partial backup.
         if os.path.exists(UPLOAD_DIR):
             shutil.copytree(
                 UPLOAD_DIR,

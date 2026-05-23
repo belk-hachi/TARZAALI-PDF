@@ -219,11 +219,21 @@ def init_db():
 
 # ─── Liste Operations ───────────────────────────────────────────────────────
 
-def save_extraction_result(extraction_result, original_filename=None):
+def save_extraction_result(extraction_result, original_filename=None,
+                          conn=None):
     """Save the AI extraction result (list + patients) to DB.
 
     Overwrites if list_number already exists (cascade deletes old patients).
     Returns the liste_id, or None if list_number is missing.
+
+    Args:
+        extraction_result: Dict from AI extraction with list_number,
+            liste_date, print_date, and patients list.
+        original_filename: Stored in listes table for source PDF lookup.
+        conn: Optional SQLite connection. If None (default), uses the
+            request-scoped connection from get_db(). Pass an explicit
+            connection when calling outside a Flask request context
+            (e.g., from scripts or background tasks).
     """
     list_number = (
         extraction_result.get("list_number")
@@ -232,7 +242,7 @@ def save_extraction_result(extraction_result, original_filename=None):
     if not list_number:
         return None
 
-    conn = get_db()
+    conn = conn or get_db()
     cursor = conn.cursor()
 
     # Delete existing list if present (cascade handles patients)
@@ -259,6 +269,9 @@ def save_extraction_result(extraction_result, original_filename=None):
     # Insert patients
     patients = extraction_result.get("patients", [])
     for p in patients:
+        last_name = (p.get("lastName") or "").strip().upper()
+        first_name = (p.get("firstName") or "").strip().upper()
+
         # Compute status from subtests (duplicated logic for DB-layer
         # self-containment — matches helpers.get_patient_status_summary
         # but also handles "rejected")
@@ -283,8 +296,8 @@ def save_extraction_result(extraction_result, original_filename=None):
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (
                 liste_id,
-                p.get("lastName"),
-                p.get("firstName"),
+                last_name,
+                first_name,
                 p.get("dateOfBirth"),
                 status,
                 test_count,
@@ -296,9 +309,13 @@ def save_extraction_result(extraction_result, original_filename=None):
     return liste_id
 
 
-def get_all_listes():
-    """Get all listes with patient counts, sorted by date descending."""
-    conn = get_db()
+def get_all_listes(conn=None):
+    """Get all listes with patient counts, sorted by date descending.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT l.*, COUNT(p.id) as patient_count
@@ -314,21 +331,28 @@ def get_all_listes():
     return rows
 
 
-def get_liste_by_id(liste_id):
-    """Get a single liste row by ID."""
-    conn = get_db()
+def get_liste_by_id(liste_id, conn=None):
+    """Get a single liste row by ID.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
     row = conn.execute(
         "SELECT * FROM listes WHERE id = ?", (liste_id,)
     ).fetchone()
     return row
 
 
-def delete_liste_if_empty(liste_id):
+def delete_liste_if_empty(liste_id, conn=None):
     """Delete an entire list ONLY if it has no patients.
 
     Returns True if deleted, False if patients exist.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
     """
-    conn = get_db()
+    conn = conn or get_db()
     cursor = conn.cursor()
     count = cursor.execute(
         "SELECT COUNT(*) FROM patients WHERE liste_id = ?", (liste_id,)
@@ -402,9 +426,13 @@ _PATIENT_ORDER = """
 
 
 def get_patients(liste_id=None, search_query=None, status_filter=None,
-                 limit=None, offset=None):
-    """Get patients with their metadata, filtered and paginated."""
-    conn = get_db()
+                 limit=None, offset=None, conn=None):
+    """Get patients with their metadata, filtered and paginated.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
     cursor = conn.cursor()
 
     where, params = _build_patient_conditions(
@@ -429,9 +457,14 @@ def get_patients(liste_id=None, search_query=None, status_filter=None,
     return cursor.fetchall()
 
 
-def count_patients(liste_id=None, search_query=None, status_filter=None):
-    """Count patients matching the given filters."""
-    conn = get_db()
+def count_patients(liste_id=None, search_query=None, status_filter=None,
+                   conn=None):
+    """Count patients matching the given filters.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
     cursor = conn.cursor()
 
     where, params = _build_patient_conditions(
@@ -443,14 +476,17 @@ def count_patients(liste_id=None, search_query=None, status_filter=None):
     return cursor.fetchone()[0]
 
 
-def get_patient_with_liste(patient_id):
+def get_patient_with_liste(patient_id, conn=None):
     """Get a patient row joined with its liste info and original filename.
 
     Returns a Row with all patient columns plus l.list_number,
     l.liste_date, l.print_date, l.original_filename.
     Returns None if patient not found.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
     """
-    conn = get_db()
+    conn = conn or get_db()
     row = conn.execute(
         """SELECT p.*, l.list_number, l.liste_date, l.print_date,
                   l.original_filename
@@ -462,21 +498,28 @@ def get_patient_with_liste(patient_id):
     return row
 
 
-def delete_patient(patient_id):
-    """Delete a single patient record."""
-    conn = get_db()
+def delete_patient(patient_id, conn=None):
+    """Delete a single patient record.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
     conn.execute("DELETE FROM patients WHERE id = ?", (patient_id,))
     conn.commit()
 
 
 # ─── Patient Metadata (notes, printed status) ──────────────────────────────
 
-def update_patient_notes(patient_id, notes):
+def update_patient_notes(patient_id, notes, conn=None):
     """Update a patient's notes in patient_metadata (visit-isolated).
 
     Uses UPSERT with the 4-field identity key.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
     """
-    conn = get_db()
+    conn = conn or get_db()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -496,9 +539,13 @@ def update_patient_notes(patient_id, notes):
     conn.commit()
 
 
-def mark_patient_printed(patient_id):
-    """Mark a patient as printed/delivered in patient_metadata."""
-    conn = get_db()
+def mark_patient_printed(patient_id, conn=None):
+    """Mark a patient as printed/delivered in patient_metadata.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
     cursor = conn.cursor()
 
     now = datetime.now().isoformat()
@@ -519,9 +566,13 @@ def mark_patient_printed(patient_id):
     conn.commit()
 
 
-def unmark_patient_printed(patient_id):
-    """Unmark a patient as printed/delivered in patient_metadata."""
-    conn = get_db()
+def unmark_patient_printed(patient_id, conn=None):
+    """Unmark a patient as printed/delivered in patient_metadata.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -544,7 +595,7 @@ def unmark_patient_printed(patient_id):
 # ─── Patient Identity Update ───────────────────────────────────────────────
 
 def update_patient_identity(patient_id, new_last_name, new_first_name,
-                            new_dob):
+                            new_dob, conn=None):
     """Update patient identity (name, DOB) across both tables.
 
     This is the most complex write operation in the app:
@@ -555,8 +606,14 @@ def update_patient_identity(patient_id, new_last_name, new_first_name,
        one, then deletes the old record.
 
     Returns (True, None) on success, (False, error_message) on failure.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
     """
-    conn = get_db()
+    new_last_name = (new_last_name or "").strip().upper()
+    new_first_name = (new_first_name or "").strip().upper()
+
+    conn = conn or get_db()
     try:
         cursor = conn.cursor()
 
@@ -639,13 +696,16 @@ def update_patient_identity(patient_id, new_last_name, new_first_name,
 
 # ─── Dashboard Stats ───────────────────────────────────────────────────────
 
-def get_dashboard_stats(liste_id=None):
+def get_dashboard_stats(liste_id=None, conn=None):
     """Get aggregate stats for patients, optionally filtered by liste_id.
 
     Returns a dict with: total, pending, completed, rejected,
     not_printed, printed.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
     """
-    conn = get_db()
+    conn = conn or get_db()
     cursor = conn.cursor()
 
     params = []
@@ -663,23 +723,23 @@ def get_dashboard_stats(liste_id=None):
     total = cursor.fetchone()[0]
 
     # Per-status counts
-    status_filter = (
+    status_clause = (
         "AND p.status = ?" if where_clause else "WHERE p.status = ?"
     )
     cursor.execute(
-        f"SELECT COUNT(*) {query_base} {status_filter}",
+        f"SELECT COUNT(*) {query_base} {status_clause}",
         params + ["pending"],
     )
     pending = cursor.fetchone()[0]
 
     cursor.execute(
-        f"SELECT COUNT(*) {query_base} {status_filter}",
+        f"SELECT COUNT(*) {query_base} {status_clause}",
         params + ["completed"],
     )
     completed = cursor.fetchone()[0]
 
     cursor.execute(
-        f"SELECT COUNT(*) {query_base} {status_filter}",
+        f"SELECT COUNT(*) {query_base} {status_clause}",
         params + ["rejected"],
     )
     rejected = cursor.fetchone()[0]

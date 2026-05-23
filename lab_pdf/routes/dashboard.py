@@ -13,6 +13,7 @@ from ..database import (
     get_all_listes, get_dashboard_stats, get_patients, count_patients,
     mark_patient_printed, unmark_patient_printed, update_patient_notes,
     update_patient_identity, delete_patient, delete_liste_if_empty,
+    get_liste_by_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -100,7 +101,7 @@ def update_patient_route():
     """
     data = request.json
     patient_id = data.get("patient_id")
-    new_last_name = data.get("last_name", "").upper()
+    new_last_name = data.get("last_name")
     new_first_name = data.get("first_name")
     new_dob = data.get("date_of_birth")
 
@@ -138,9 +139,6 @@ def delete_liste_route(liste_id):
 @dashboard_bp.route("/view-source/<int:liste_id>")
 def view_source_pdf(liste_id):
     """Show the original uploaded PDF in the viewer."""
-    from ..database import get_liste_by_id
-    from ..config import UPLOAD_DIR
-
     row = get_liste_by_id(liste_id)
 
     if not row or not row['original_filename']:
