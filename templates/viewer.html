@@ -46,8 +46,8 @@
                         <a href="/download-partial/{{ pdf_filename }}" class="btn btn-primary btn-sm btn-action">
                             <i class="bi bi-download"></i> Télécharger
                         </a>
-                    {% else %}
-                        <a href="/download/{{ session_id }}/{{ patient_index }}" class="btn btn-primary btn-sm btn-action">
+                    {% elif session_id == 'db' %}
+                        <a href="/download-db/{{ patient_index }}" class="btn btn-primary btn-sm btn-action">
                             <i class="bi bi-download"></i> Télécharger
                         </a>
                     {% endif %}

@@ -1,39 +1,39 @@
-# Python environment
+# Virtual environments
 .venv/
+venv/
+env/
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Database and Data
+# Database (created at runtime)
 lab.db
-lab.db-journal
+
+# Writable data directories (created at runtime)
 uploads/
 generated/
 logs/
-data2.json
-OLD_DATA/
+backups/
 
-# Secrets
+# Config with secrets (use config.json.example instead)
+config.json
+
+# Legacy key file
 gemini_key.txt
 
-# Distribution & Build
+# PyInstaller build artifacts
+*.spec
 build/
 dist/
-APP.exe/
-*.spec
-exe_command.txt
 
-# Editors
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
 # OS
+.DS_Store
 Thumbs.db
-desktop.ini
-
-# Project Specific
-Labo.json
-config.json
-.gemini/

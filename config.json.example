@@ -2,5 +2,7 @@
   "api_key": "YOUR_GEMINI_API_KEY",
   "model": "models/gemini-2.5-flash",
   "online_username": "YOUR_USERNAME",
-  "online_password": "YOUR_PASSWORD"
+  "online_password": "YOUR_PASSWORD",
+  "online_api_key": "e1cbcb83-a73d-4623-ac16-363d7724040b",
+  "max_backups": 10
 }
