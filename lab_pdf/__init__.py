@@ -19,7 +19,7 @@ from flask import Flask
 from .config import (
     resource_path, app_config, ensure_directories,
 )
-from .database import init_db, get_db, teardown_db
+from .database import init_db, teardown_db
 from .backup_service import backup_scheduler, create_backup
 
 
@@ -53,7 +53,8 @@ def create_app():
     init_db()
 
     # ─── Request-scoped database connections ────────────────────────────
-    app.before_request(lambda: None)  # Placeholder if needed later
+    # get_db() lazily opens a connection on first use per-request.
+    # teardown_db() closes it automatically at end of request.
     app.teardown_appcontext(teardown_db)
 
     # ─── Jinja filters ──────────────────────────────────────────────────

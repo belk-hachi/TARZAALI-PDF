@@ -2,6 +2,8 @@
 Main routes: index, upload page, static file serving.
 """
 
+import os
+
 from flask import Blueprint, redirect, url_for, send_file, render_template
 
 from ..config import LOGO_PATH, GENERATED_DIR, UPLOAD_DIR
@@ -30,8 +32,7 @@ def serve_pdf(filename):
     # Only serve .pdf files
     if not filename.lower().endswith(".pdf"):
         return "Invalid file type", 400
-    pdf_path = GENERATED_DIR / filename if hasattr(GENERATED_DIR, '__truediv__') else f"{GENERATED_DIR}/{filename}"
-    import os
+    pdf_path = os.path.join(GENERATED_DIR, filename)
     if not os.path.exists(pdf_path):
         return "PDF not found", 404
     return send_file(pdf_path, mimetype="application/pdf")
@@ -44,7 +45,6 @@ def serve_source_pdf(filename):
         return "Invalid filename", 400
     if not filename.lower().endswith(".pdf"):
         return "Invalid file type", 400
-    import os
     pdf_path = os.path.join(UPLOAD_DIR, filename)
     if not os.path.exists(pdf_path):
         return "Original PDF not found", 404

@@ -66,7 +66,7 @@ def get_cijoint_pages(patient):
 def make_patient_filename(patient, suffix=""):
     """Build a filename string for a patient's generated PDF.
 
-    Format: LASTNAME_FIRSTNAME_DDMYYYYAAAAMMJJHHMMSS[_suffix].pdf
+    Format: LASTNAME_FIRSTNAME_<sanitized_sampleDate>[_suffix].pdf
     The date portion is the sampleDate with all non-digit chars stripped.
     """
     last_name = patient.get("lastName", "unknown")
