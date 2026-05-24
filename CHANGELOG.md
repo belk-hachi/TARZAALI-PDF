@@ -2,7 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-24] - Dashboard UI Refactoring & JS Modularization
+
+### Added
+- **External JS Module**: Extracted ~900 lines of inline JavaScript from `templates/dashboard.html` to a dedicated `static/js/dashboard.js` file for better maintainability and performance.
+- **Global Configuration Injector**: Implemented a global `CONFIG` object injected into `templates/dashboard.html` to safely pass server-side variables (Jinja2) to the static JavaScript context, enabling consistent URL routing.
+
+### Changed
+- **JS Integration Strategy**: Modernized the dashboard's initialization logic to be more robust, ensuring all event listeners (polling, modal handlers, search debouncing) are registered correctly after DOM content load.
+- **Codebase Cleanup**: Removed duplicated HTML closing tags and optimized script loading in the dashboard template.
+
+### Fixed
+- **JavaScript Initialization Errors**: Repaired critical regressions caused by incorrect extraction, restoring polling, search focus, and dynamic modal behavior.
+- **Broken API URLs**: Fixed hardcoded API route strings to dynamically resolve correct paths, ensuring backup and configuration services function properly.
+
+---
+
 ## [2026-05-24] - Email Configuration & Activity Monitoring
+
 
 ### Added
 - **Email Configuration Tab**: Introduced a dedicated "Email" tab in settings with 8 configurable fields for IMAP server, credentials, filtering, and fetch intervals.
