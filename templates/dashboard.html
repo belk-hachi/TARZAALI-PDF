@@ -1235,13 +1235,14 @@
                                 `;
                             } else if (notif.patient_id) {
                                 html += `
-                                    <a href="/patient/${notif.patient_id}" class="text-decoration-none text-reset">
+                                    <a href="/view-db/${notif.patient_id}" class="text-decoration-none text-reset">
                                         ${notifContent}
                                     </a>
                                 `;
                             } else {
                                 html += notifContent;
                             }
+
                         });
                         itemsContainer.innerHTML = html;
                     } else {
