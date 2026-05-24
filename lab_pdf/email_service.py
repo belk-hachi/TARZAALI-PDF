@@ -137,9 +137,12 @@ def fetch_and_process_emails():
                 
                 act_logger.info(f"Fusion réussie: {final_filename} ({len(downloaded_files)} PDFs)")
 
-                # 4. DELETE EMAIL immediately after successful merge/fetch
-                mail.store(e_id, '+FLAGS', '\\Deleted')
-                act_logger.info(f"Email supprimé (ID: {e_id.decode()})")
+                # 4. DELETE EMAIL optionally after successful merge/fetch
+                if config.get("delete_after_fetch", True):
+                    mail.store(e_id, '+FLAGS', '\\Deleted')
+                    act_logger.info(f"Email supprimé (ID: {e_id.decode()})")
+                else:
+                    act_logger.info(f"Email conservé (ID: {e_id.decode()})")
                 processed_count += 1
 
                 # 3. Process with AI

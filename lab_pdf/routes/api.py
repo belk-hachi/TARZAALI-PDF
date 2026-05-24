@@ -57,6 +57,7 @@ def config_endpoint():
             "email_imap_server", "email_user", "email_pass",
             "email_folder", "email_sender_filter", "email_subject_filter",
             "email_main_pdf_keyword", "email_fetch_interval",
+            "delete_after_fetch"
         ]
         for f in fields:
             if f in data:

@@ -332,7 +332,8 @@ function saveConfig() {
         email_sender_filter: document.getElementById('email_sender_filter').value,
         email_subject_filter: document.getElementById('email_subject_filter').value,
         email_main_pdf_keyword: document.getElementById('email_main_pdf_keyword').value,
-        email_fetch_interval: parseInt(document.getElementById('email_fetch_interval').value) || 60
+        email_fetch_interval: parseInt(document.getElementById('email_fetch_interval').value) || 60,
+        delete_after_fetch: document.getElementById('delete_after_fetch').checked
     };
     fetch(CONFIG.urls.config, {
         method: 'POST',
