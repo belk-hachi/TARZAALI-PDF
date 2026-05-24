@@ -110,6 +110,7 @@ class Config:
         "email_folder": "INBOX",
         "email_sender_filter": "labo.ibnsina17@gmail.com",
         "email_subject_filter": "Compte Rendu",
+        "email_main_pdf_keyword": "liste",
         "email_fetch_interval": 60,
     }
 

@@ -95,13 +95,10 @@
                             <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-login" type="button">Login</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-email" type="button">Récupération E-mail</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-lab" type="button">Laboratoire</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-maintenance" type="button">Maintenance</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-email" type="button">Email</button>
                         </li>
                     </ul>
                     <div class="tab-content" id="settingsTabContent">
@@ -134,77 +131,6 @@
                                 <input type="password" id="online_password" class="form-control" placeholder="Mot de passe">
                             </div>
                         </div>
-                        <!-- Email Tab -->
-                        <div class="tab-pane fade" id="tab-email">
-                            <div class="p-3 bg-light rounded-3 text-center mb-4">
-                                <i class="bi bi-envelope-at fs-1 text-success mb-2"></i>
-                                <h6 class="fw-bold">Récupération des Emails</h6>
-                                <p class="small text-muted mb-3">Vérifier manuellement les nouveaux emails et traiter les PDFs.</p>
-                                <button type="button" class="btn btn-outline-success w-100 d-flex align-items-center justify-content-center gap-2" onclick="triggerEmailFetch(this)">
-                                    <i class="bi bi-arrow-repeat"></i> Récupérer Emails
-                                </button>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Serveur IMAP</label>
-                                <input type="text" id="email_imap_server" class="form-control" placeholder="ex: ssl0.ovh.net">
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted small">Utilisateur Email</label>
-                                    <input type="text" id="email_user" class="form-control" placeholder="votre@email.com">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted small">Mot de passe Email</label>
-                                    <input type="password" id="email_pass" class="form-control" placeholder="Mot de passe">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Dossier Email (IMAP)</label>
-                                <input type="text" id="email_folder" class="form-control" placeholder="INBOX">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Filtrer par Expéditeur</label>
-                                <input type="text" id="email_sender_filter" class="form-control" placeholder="ex: labo.ibnsina17@gmail.com">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Filtrer par Objet (Subject)</label>
-                                <input type="text" id="email_subject_filter" class="form-control" placeholder="ex: Compte Rendu">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Intervalle de récupération (minutes)</label>
-                                <input type="number" id="email_fetch_interval" class="form-control" min="1" max="1440">
-                                <small class="text-muted" style="font-size: 0.7rem;">Fréquence de vérification des nouveaux emails.</small>
-                            </div>
-                        </div>
-                        <!-- Lab Tab -->
-                        <div class="tab-pane fade" id="tab-lab">
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Nom du Laboratoire</label>
-                                <input type="text" id="lab_dr_name" class="form-control" placeholder="Ex: IBN SINA. Dr N.KACI">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Adresse Ligne 1</label>
-                                <input type="text" id="lab_addr_l1" class="form-control" placeholder="Boulevard...">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Adresse Ligne 2</label>
-                                <input type="text" id="lab_addr_l2" class="form-control" placeholder="Ville/Mosquée...">
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted small">Téléphone</label>
-                                    <input type="text" id="lab_tel" class="form-control" placeholder="027902479">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-muted small">Fax</label>
-                                    <input type="text" id="lab_fax" class="form-control" placeholder="027902479">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-muted small">Mobile</label>
-                                <input type="text" id="lab_mobile" class="form-control" placeholder="0671013704">
-                            </div>
-                        </div>
                         <!-- Maintenance Tab -->
                         <div class="tab-pane fade" id="tab-maintenance">
                             <div class="mb-3">
@@ -232,7 +158,57 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
+                        <!-- Email Tab -->
+                        <div class="tab-pane fade" id="tab-email">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Serveur IMAP</label>
+                                <input type="text" id="email_imap_server" class="form-control" placeholder="imap.gmail.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Adresse Email</label>
+                                <input type="text" id="email_user" class="form-control" placeholder="votre@email.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Mot de passe</label>
+                                <input type="password" id="email_pass" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Dossier</label>
+                                <input type="text" id="email_folder" class="form-control" placeholder="INBOX">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Filtrer par expéditeur</label>
+                                <input type="text" id="email_sender_filter" class="form-control" placeholder="lab@example.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Filtrer par sujet</label>
+                                <input type="text" id="email_subject_filter" class="form-control" placeholder="Compte Rendu">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Mot-clé liste principale</label>
+                                <input type="text" id="email_main_pdf_keyword" class="form-control" placeholder="liste">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Intervalle (minutes)</label>
+                                <input type="number" id="email_fetch_interval" class="form-control" placeholder="60">
+                            </div>
+                            <hr>
+                            <div class="p-3 bg-light rounded-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0">
+                                        <i class="bi bi-terminal me-2"></i>Activité Email
+                                    </h6>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshEmailActivity()">
+                                        <i class="bi bi-arrow-clockwise"></i> Rafraîchir
+                                    </button>
+                                </div>
+                                <pre id="email-activity-log" 
+                                     style="max-height: 200px; overflow-y: auto; font-size: 0.75rem; 
+                                            white-space: pre-wrap; word-break: break-word;"
+                                     class="bg-white border rounded p-2 mb-0">Cliquez sur Rafraîchir pour charger l'activité...</pre>
+                            </div>
+                        </div>
+                        <!-- Maintenance Tab -->
                     <button class="btn btn-primary w-100 mt-4" onclick="saveConfig()">Enregistrer Tout</button>
                 </div>
             </div>
@@ -1118,6 +1094,7 @@
                 email_folder: document.getElementById('email_folder').value,
                 email_sender_filter: document.getElementById('email_sender_filter').value,
                 email_subject_filter: document.getElementById('email_subject_filter').value,
+                email_main_pdf_keyword: document.getElementById('email_main_pdf_keyword').value,
                 email_fetch_interval: parseInt(document.getElementById('email_fetch_interval').value) || 60
             };
             fetch('/api/config', {
@@ -1291,15 +1268,21 @@
         }
 
         function triggerEmailFetch(btn) {
-            const originalHTML = btn.innerHTML;
+            const icon = btn.querySelector('i');
+            const textSpan = btn.querySelector('.btn-text');
+            const originalText = textSpan ? textSpan.textContent : 'Récupérer Emails';
+            
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Récupération...';
+            if (icon) icon.classList.add('spin-animation');
+            if (textSpan) textSpan.textContent = 'Récupération...';
             
             fetch("/api/trigger-email-fetch", { method: 'POST' })
                 .then(res => res.json())
                 .then(data => {
                     btn.disabled = false;
-                    btn.innerHTML = originalHTML;
+                    if (icon) icon.classList.remove('spin-animation');
+                    if (textSpan) textSpan.textContent = originalText;
+                    
                     if (data.success) {
                         alert("La récupération des emails est terminée !");
                         window.location.reload();
@@ -1309,7 +1292,8 @@
                 })
                 .catch(err => {
                     btn.disabled = false;
-                    btn.innerHTML = originalHTML;
+                    if (icon) icon.classList.remove('spin-animation');
+                    if (textSpan) textSpan.textContent = originalText;
                     alert("Erreur de connexion lors de la récupération des emails.");
                 });
         }
@@ -1327,6 +1311,7 @@
                     if (data.success) {
                         if (data.count > 0) {
                             fetchNotifications();
+                            refreshEmailActivity();
                         } else {
                             alert("Aucun nouvel e-mail trouvé.");
                         }
@@ -1338,6 +1323,21 @@
                     icon.classList.remove('spin-animation');
                     console.error("Quick fetch error:", err);
                     alert("Erreur de connexion lors de la récupération des emails.");
+                });
+        }
+
+        function refreshEmailActivity() {
+            const log = document.getElementById('email-activity-log');
+            if (!log) return;
+            log.textContent = 'Chargement...';
+            fetch('/api/email-activity')
+                .then(res => res.json())
+                .then(data => {
+                    log.textContent = data.lines.join('\n') || 'Aucune activité.';
+                    log.scrollTop = log.scrollHeight;
+                })
+                .catch(() => {
+                    log.textContent = 'Erreur lors du chargement.';
                 });
         }
 
@@ -1378,6 +1378,11 @@
             // Notification Polling
             fetchNotifications();
             setInterval(fetchNotifications, 60000); // Poll every minute
+
+            // Auto-load Email Activity when tab is shown
+            document.querySelectorAll('[data-bs-target="#tab-email"]').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', refreshEmailActivity);
+            });
 
             // Theme Initialization
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1420,6 +1425,7 @@
                             const emailFolderInput = document.getElementById('email_folder');
                             const emailSenderInput = document.getElementById('email_sender_filter');
                             const emailSubjectInput = document.getElementById('email_subject_filter');
+                            const emailKeywordInput = document.getElementById('email_main_pdf_keyword');
                             const emailIntervalInput = document.getElementById('email_fetch_interval');
                             const select = document.getElementById('model-select');
                             
@@ -1439,7 +1445,8 @@
                             if (emailPassInput) emailPassInput.value = data.email_pass || '';
                             if (emailFolderInput) emailFolderInput.value = data.email_folder || 'INBOX';
                             if (emailSenderInput) emailSenderInput.value = data.email_sender_filter || '';
-                            if (emailSubjectInput) emailSubjectInput.value = data.email_subject_filter || '';
+                            if (emailSubjectInput) emailSubjectInput.value = data.email_subject_filter || 'Compte Rendu';
+                            if (emailKeywordInput) emailKeywordInput.value = data.email_main_pdf_keyword || 'liste';
                             if (emailIntervalInput) emailIntervalInput.value = data.email_fetch_interval || 60;
                             
                             if (select) {

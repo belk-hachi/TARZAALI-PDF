@@ -4,10 +4,11 @@ API routes: config, models, online results, backup.
 
 import json
 import logging
+import os
 
 from flask import Blueprint, request, jsonify
 
-from ..config import app_config
+from ..config import app_config, LOGS_DIR
 from ..ai_service import ai_service
 from ..online_service import fetch_online_results
 from ..database import get_liste_by_id
@@ -16,6 +17,24 @@ from ..backup_service import create_backup
 logger = logging.getLogger(__name__)
 
 api_bp = Blueprint("api", __name__)
+
+
+@api_bp.route("/api/email-activity", methods=["GET"])
+def get_email_activity():
+    """Reads the last 50 lines of activity.log."""
+    log_path = os.path.join(LOGS_DIR, "activity.log")
+    if not os.path.exists(log_path):
+        return jsonify({"lines": ["Aucune activité enregistrée."]})
+    
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            # Return last 50 lines, stripped of trailing newlines
+            last_lines = [line.strip() for line in lines[-50:]]
+            return jsonify({"lines": last_lines})
+    except Exception as e:
+        logger.error(f"Error reading activity log: {e}")
+        return jsonify({"lines": [f"Erreur lors de la lecture des logs: {e}"]})
 
 
 @api_bp.route("/api/config", methods=["GET", "POST"])
@@ -37,7 +56,7 @@ def config_endpoint():
             "backup_dir", "max_backups",
             "email_imap_server", "email_user", "email_pass",
             "email_folder", "email_sender_filter", "email_subject_filter",
-            "email_fetch_interval",
+            "email_main_pdf_keyword", "email_fetch_interval",
         ]
         for f in fields:
             if f in data:

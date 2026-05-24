@@ -212,28 +212,28 @@ def init_db():
         )
         ''')
 
-        # 4. Notifications table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            type TEXT NOT NULL,
-            patient_id INTEGER,
-            liste_id INTEGER,
-            message TEXT NOT NULL,
-            is_read INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE,
-            FOREIGN KEY (liste_id) REFERENCES listes (id) ON DELETE CASCADE
-        )
-        ''')
+    # 4. Notifications table — always runs regardless of migration path
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        patient_id INTEGER,
+        liste_id INTEGER,
+        message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE,
+        FOREIGN KEY (liste_id) REFERENCES listes (id) ON DELETE CASCADE
+    )
+    ''')
 
-        # Migration: Add liste_id column if missing
-        try:
-            cursor.execute("ALTER TABLE notifications ADD COLUMN liste_id INTEGER")
-        except sqlite3.OperationalError:
-            pass  # Column already exists
+    # Migration: Add liste_id column if missing
+    try:
+        cursor.execute("ALTER TABLE notifications ADD COLUMN liste_id INTEGER")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
 
-        conn.commit()
+    conn.commit()
     conn.close()
     logger.info("Database initialized successfully")
 
@@ -265,6 +265,21 @@ def save_extraction_result(extraction_result, original_filename=None,
 
     conn = conn or get_db()
     cursor = conn.cursor()
+
+    # Before DELETE - check if it's a re-import and how many pending exist
+    existing_row = cursor.execute(
+        "SELECT id FROM listes WHERE list_number = ?", (list_number,)
+    ).fetchone()
+    is_reimport = existing_row is not None
+    
+    existing_pending = 0
+    if is_reimport:
+        existing_pending = cursor.execute(
+            """SELECT COUNT(*) FROM patients p
+               JOIN listes l ON p.liste_id = l.id
+               WHERE l.list_number = ? AND p.status = 'pending'""",
+            (list_number,)
+        ).fetchone()[0]
 
     # Delete existing list if present (cascade handles patients)
     cursor.execute(
@@ -329,12 +344,14 @@ def save_extraction_result(extraction_result, original_filename=None,
     conn.commit()
     
     # Create notification for new list
-    create_notification(
-        "new_patient",
-        f"{list_number} importee, {len(patients)} patient ajoute",
-        liste_id=liste_id,
-        conn=conn
-    )
+    if is_reimport and existing_pending > 0:
+        message = f"{list_number} mise à jour, {existing_pending} résultats complétés"
+        ntype = "status_changed"
+    else:
+        message = f"{list_number} importée, {len(patients)} patients ajoutés"
+        ntype = "new_patient"
+
+    create_notification(ntype, message, liste_id=liste_id, conn=conn)
 
     return liste_id
 

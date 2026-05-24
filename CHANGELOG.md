@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-24] - Email Configuration & Activity Monitoring
+
+### Added
+- **Email Configuration Tab**: Introduced a dedicated "Email" tab in settings with 8 configurable fields for IMAP server, credentials, filtering, and fetch intervals.
+- **Email Activity Log Viewer**: Integrated a real-time log viewer in the dashboard to monitor background email fetching and processing events.
+- **Manual Fetch Visual Feedback**: Added a spinning animation and dynamic text updates to the "Récupérer Emails" button to indicate active processing.
+- **Configurable PDF Sorting**: Users can now specify a keyword (e.g., "liste") to prioritize specific PDF attachments during email processing.
+- **Missing Credentials Alert**: The system now provides an explicit notification if a manual fetch is triggered without email credentials configured.
+
+### Changed
+- **Robust Database Initialization**: Refactored the notification system setup to ensure it's always correctly initialized during startup.
+- **Contextual Notifications**: Improved import notifications to distinguish between new lists and updates to existing lists, with counts of completed results.
+- **Email Service Stability**: Fixed a critical Flask context bug and improved error handling for background tasks.
+
+### Fixed
+- **Silent Processing Errors**: Replaced silent failures with detailed debug logging to aid in troubleshooting background operations.
+- **Lazy Logger Initialization**: Optimized the activity logger to prevent directory creation errors during the application import phase.
+
 ## [2026-05-24] - Email Processing & Logging Enhancements
 
 ### Added
