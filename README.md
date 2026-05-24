@@ -1,19 +1,17 @@
 # TARZALI-PDF
 
-TARZALI-PDF is a modern web application designed to automate the extraction of patient data from medical laboratory reports using the Google Gemini AI, and generate professional, customized PDF results.
+TARZALI-PDF is a modern, high-density web application designed to automate medical laboratory workflow management. It covers the entire lifecycle from automatic email retrieval and AI-powered data extraction to professional PDF generation and long-term data archiving.
 
 ## 🚀 Key Features
-* **AI-Powered Extraction**: Uses Google Gemini 2.5 Flash to intelligently parse complex lab reports (including scans).
-* **Interactive Upload**: Modern modal-based upload with real-time progress tracking and automated multi-step processing.
-* **Smart Reporting**: Generates clean, professional PDF reports with:
-    * Automatic merging of original diagnostic images ("ci-joint" pages).
-    * Dynamic result formatting (clean numeric display).
-    * Clear highlighting for abnormal results (asterisks and red bold text).
-* **Advanced Dashboard**: Full-width management system with:
-    * Simultaneous search by **Last Name**, **First Name**, or **Test Name**.
-    * Expandable test details directly in the patient table.
-    * Persistent access to the original source PDF for every extraction.
-* **Portable & Secure**: Built with Flask and SQLite; can be compiled into a standalone Windows executable.
+* **Background Email Automation**: Automatically polls (IMAP) for laboratory reports, processes attachments, and merges PDF results.
+* **AI-Powered Extraction**: Uses Google Gemini 2.5 Flash to intelligently parse reports and extract patient data.
+* **Smart Reporting**: Generates professional, customized PDF reports with dynamic branding and automatic handling of annexed images.
+* **High-Density Dashboard**: A modern, Slate-themed interface with real-time stats, comprehensive filters, and inline patient editing.
+* **Maintenance & Reliability**:
+    * **Compressed Backups**: Automated, configurable ZIP backups of database and uploads.
+    * **Activity Logging**: Dedicated log viewer for tracking background processes.
+    * **Offline Ready**: Fully localized UI assets—no internet required for interface rendering.
+* **Portable & Secure**: Built with Flask and SQLite; supports standalone Windows deployment.
 
 ## 🛠️ Prerequisites
 * Python 3.13+
@@ -37,13 +35,12 @@ TARZALI-PDF is a modern web application designed to automate the extraction of p
    ```
 
 ## ⚙️ Configuration
-* **API Key:** 
-    1. Obtain a free API key from [Google AI Studio](https://aistudio.google.com/).
-    2. Open the application and click on the **⚙️ Paramètres** button in the topbar.
-    3. Paste your key into the "Clé API Google Gemini" field and click **Enregistrer Tout**. 
-    *The configuration is stored in `config.json` at the root of the project.*
-* **AI Model:** You can switch between different Gemini models directly in the **Paramètres** modal. The app defaults to Gemini 2.5 Flash for the best balance of speed and accuracy.
-* **Prompt Engineering:** Customize `prompt.md` to fine-tune how the AI extracts data from your specific report formats.
+* **System Settings**: Access the **⚙️ Paramètres** modal in the dashboard to configure:
+    * **API Key**: Gemini API key from [Google AI Studio](https://aistudio.google.com/).
+    * **Email Integration**: IMAP server, credentials, and filtering rules for automated result retrieval.
+    * **Backup**: Custom storage paths and connectivity testing.
+    * **Laboratory Info**: Dynamic header information for generated reports.
+* **Prompt Engineering**: Customize `prompt.md` to fine-tune extraction behavior.
 
 ## 📦 Bundling as Executable
 To create a standalone `.exe` for Windows using PyInstaller:
@@ -55,6 +52,4 @@ pyinstaller --noconfirm --onefile --windowed `
     --add-data "static;static" `
     --name "TARZALI-PDF" `
     app.py
-```
 
-The compiled application will be available in the `dist/` folder.
