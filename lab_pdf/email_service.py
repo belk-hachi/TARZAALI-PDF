@@ -4,21 +4,52 @@ import email
 import logging
 import threading
 import uuid
+import shutil
 from datetime import datetime
 from email.header import decode_header
 from pypdf import PdfWriter
 
-from .config import app_config, UPLOAD_DIR
+from .config import app_config, UPLOAD_DIR, LOGS_DIR
 from .database import save_extraction_result
 from .ai_service import ai_service
 
 logger = logging.getLogger(__name__)
 
+# Specialized logger for Email/AI activity
+activity_logger = logging.getLogger("activity_log")
+activity_logger.setLevel(logging.INFO)
+activity_log_file = os.path.join(LOGS_DIR, "activity.log")
+
+if not activity_logger.handlers:
+    # Ensure logs directory exists
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    fh = logging.FileHandler(activity_log_file, encoding='utf-8')
+    fh.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+    activity_logger.addHandler(fh)
+
 DEFAULT_FETCH_INTERVAL = 3600  # 1 hour in seconds
 
 
+def cleanup_activity_logs():
+    """Delete activity logs older than 7 days by clearing the file if its mtime is too old."""
+    try:
+        if not os.path.exists(activity_log_file):
+            return
+        
+        now = datetime.now().timestamp()
+        retention_seconds = 7 * 24 * 60 * 60
+        
+        file_age = os.path.getmtime(activity_log_file)
+        if (now - file_age) > retention_seconds:
+            with open(activity_log_file, 'w', encoding='utf-8') as f:
+                f.write(f"--- Log reset on {datetime.now()} (7-day retention) ---\n")
+    except Exception as e:
+        logger.error(f"Activity log cleanup failed: {e}")
+
+
 def fetch_and_process_emails():
-    """Fetch PDFs from email, merge them, and process with IA."""
+    """Fetch PDFs from email, merge them, process with IA, and DELETE emails on success."""
+    cleanup_activity_logs()
     config = app_config.load()
     
     imap_server = config.get("email_imap_server")
@@ -26,8 +57,7 @@ def fetch_and_process_emails():
     email_pass = config.get("email_pass")
     
     if not email_user or not email_pass:
-        logger.info("Email credentials not configured. Skipping email fetch.")
-        return
+        return 0
 
     folder = config.get("email_folder", "INBOX")
     sender_filter = config.get("email_sender_filter", "")
@@ -44,6 +74,7 @@ def fetch_and_process_emails():
     temp_dir = os.path.join(UPLOAD_DIR, f"tmp_email_{uuid.uuid4().hex[:8]}")
     os.makedirs(temp_dir, exist_ok=True)
 
+    processed_count = 0
     try:
         # 1. Connect and Fetch
         mail = imaplib.IMAP4_SSL(imap_server)
@@ -52,13 +83,11 @@ def fetch_and_process_emails():
 
         status, messages = mail.search(None, criteria)
         if status != "OK" or not messages[0]:
-            logger.info("No new emails found matching criteria.")
             mail.logout()
             return 0
 
         email_ids = messages[0].split()
-        processed_count = len(email_ids)
-        logger.info(f"Found {processed_count} new emails. Processing...")
+        activity_logger.info(f"Début récupération: {len(email_ids)} nouveaux emails trouvés.")
 
         for e_id in email_ids:
             downloaded_files = []
@@ -103,12 +132,14 @@ def fetch_and_process_emails():
                 merger.write(final_path)
                 merger.close()
                 
-                logger.info(f"Merged PDF created from email: {final_filename}")
+                activity_logger.info(f"Fusion réussie: {final_filename} ({len(downloaded_files)} PDFs)")
 
                 # 3. Process with AI
                 try:
                     model = config.get("model", "gemini-2.5-flash")
                     prompt = app_config.load_prompt()
+                    activity_logger.info(f"IA Extraction: Début pour {final_filename}")
+                    
                     extraction_result = ai_service.extract_from_pdf(
                         final_path, prompt, model_name=model
                     )
@@ -116,8 +147,16 @@ def fetch_and_process_emails():
                     save_extraction_result(
                         extraction_result, original_filename=final_filename
                     )
-                    logger.info(f"Successfully processed email result: {final_filename}")
+                    patient_count = len(extraction_result.get("patients", []))
+                    activity_logger.info(f"IA Succès: {final_filename} -> {patient_count} patients ajoutés")
+                    
+                    # 4. DELETE EMAIL after successful processing
+                    mail.store(e_id, '+FLAGS', '\\Deleted')
+                    activity_logger.info(f"Email supprimé (ID: {e_id.decode()})")
+                    processed_count += 1
+                    
                 except Exception as e:
+                    activity_logger.error(f"IA Échec pour {final_filename}: {e}")
                     logger.error(f"AI Processing failed for email PDF {final_filename}: {e}")
 
             # Cleanup temp files for this email
@@ -127,15 +166,18 @@ def fetch_and_process_emails():
                 except:
                     pass
 
+        # Permanently delete emails marked with \Deleted
+        mail.expunge()
         mail.logout()
         return processed_count
 
     except Exception as e:
+        activity_logger.error(f"Erreur service email: {e}")
         logger.error(f"Email fetch service failed: {e}")
+        return processed_count
     finally:
         if os.path.exists(temp_dir):
             try:
-                import shutil
                 shutil.rmtree(temp_dir)
             except:
                 pass
