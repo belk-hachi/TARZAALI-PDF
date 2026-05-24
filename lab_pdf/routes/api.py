@@ -34,6 +34,10 @@ def config_endpoint():
             "api_key", "model", "online_username", "online_password",
             "online_api_key", "lab_dr_name", "lab_addr_l1",
             "lab_addr_l2", "lab_tel", "lab_fax", "lab_mobile",
+            "backup_dir", "max_backups",
+            "email_imap_server", "email_user", "email_pass",
+            "email_folder", "email_sender_filter", "email_subject_filter",
+            "email_fetch_interval",
         ]
         for f in fields:
             if f in data:
@@ -59,6 +63,23 @@ def get_available_models():
         return jsonify({"error": str(e)}), 500
 
 
+@api_bp.route("/api/notifications")
+def get_notifications():
+    """Get all unread notifications."""
+    from ..database import get_unread_notifications
+    rows = get_unread_notifications()
+    notifications = [dict(row) for row in rows]
+    return jsonify(notifications)
+
+
+@api_bp.route("/api/notifications/read", methods=["POST"])
+def mark_read():
+    """Mark all notifications as read."""
+    from ..database import mark_notifications_read
+    mark_notifications_read()
+    return jsonify({"success": True})
+
+
 @api_bp.route("/api/online-results/<int:liste_id>")
 def online_results(liste_id):
     """Fetch real-time lab results from external API for a specific list date."""
@@ -71,6 +92,56 @@ def online_results(liste_id):
         return jsonify({"error": error}), 502
 
     return jsonify(data)
+
+
+@api_bp.route("/api/test-backup-dir", methods=["POST"])
+def test_backup_dir():
+    """Verify that a directory is accessible and writable.
+
+    This is used to test network paths or custom local folders
+    before saving the configuration.
+    """
+    import os
+    data = request.json
+    path = data.get("path")
+
+    if not path:
+        return jsonify({"success": True, "message": "Le dossier par défaut sera utilisé."})
+
+    try:
+        # Check if exists (or can be created)
+        if not os.path.exists(path):
+            try:
+                os.makedirs(path, exist_ok=True)
+            except Exception:
+                return jsonify({"error": f"Le dossier n'existe pas et ne peut pas être créé."}), 400
+
+        # Check writability by creating a temporary file
+        test_file = os.path.join(path, ".write_test")
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+
+        return jsonify({"success": True, "message": "Connexion réussie ! Le dossier est accessible et scriptable."})
+    except Exception as e:
+        logger.error("Backup directory test failed: %s", e)
+        return jsonify({"error": f"Erreur d'accès : {str(e)}"}), 500
+
+
+@api_bp.route("/api/trigger-email-fetch", methods=["POST"])
+def trigger_email_fetch():
+    """Manually trigger the email fetching process.
+
+    This runs the fetcher in the current thread and returns
+    the count of emails found.
+    """
+    from ..email_service import fetch_and_process_emails
+    try:
+        count = fetch_and_process_emails()
+        return jsonify({"success": True, "count": count})
+    except Exception as e:
+        logger.error("Manual email fetch failed: %s", e)
+        return jsonify({"error": str(e)}), 500
 
 
 @api_bp.route("/api/backup", methods=["POST"])

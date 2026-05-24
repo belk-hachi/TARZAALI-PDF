@@ -21,10 +21,10 @@
 <body>
 
     <header class="topbar">
-        <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="text-decoration-none d-flex align-items-center gap-2">
             <img src="/logo.jpg" alt="Logo" style="height: 40px; border-radius: 6px;">
             <h4 class="mb-0 text-primary fw-bold">TARZALI</h4>
-        </div>
+        </a>
         
         <div class="search-container">
             <form action="{{ url_for('dashboard.dashboard') }}" method="GET" id="search-form">
@@ -38,7 +38,34 @@
             </form>
         </div>
         
-        <div class="d-flex gap-2 ms-auto">
+        <div class="d-flex gap-3 ms-auto align-items-center">
+            <!-- Quick Email Fetch -->
+            <div id="quick-email-fetch" class="cursor-pointer text-success" title="Récupérer les emails" onclick="triggerQuickEmailFetch(this)">
+                <i class="bi bi-arrow-repeat fs-5" id="quick-fetch-icon"></i>
+            </div>
+
+            <!-- Notifications Dropdown -->
+            <div class="dropdown">
+                <div id="notification-bell" class="cursor-pointer position-relative" data-bs-toggle="dropdown" aria-expanded="false" onclick="markNotificationsRead()">
+                    <i class="bi bi-envelope fs-4"></i>
+                    <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.6rem; padding: 0.25em 0.4em;">
+                        0
+                    </span>
+                </div>
+                <ul id="notification-list" class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-2 mt-2" style="width: 320px; max-height: 450px; overflow-y: auto;">
+                    <li class="p-2 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small text-uppercase fw-bold">Notifications</span>
+                    </li>
+                    <hr class="dropdown-divider my-1">
+                    <div id="notification-items">
+                        <li class="p-4 text-center text-muted small">
+                            <i class="bi bi-envelope-open d-block fs-2 mb-2 opacity-50"></i>
+                            Aucune nouvelle notification
+                        </li>
+                    </div>
+                </ul>
+            </div>
+
             <div id="theme-toggle" onclick="toggleTheme()" title="Changer de thème" data-dark-toggle>
                 <i class="bi bi-sun" id="theme-icon"></i>
             </div>
@@ -68,6 +95,9 @@
                             <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-login" type="button">Login</button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-email" type="button">Récupération E-mail</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-lab" type="button">Laboratoire</button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -84,7 +114,7 @@
                             <div class="mb-3">
                                 <label class="form-label text-muted small">Modèle IA</label>
                                 <div class="input-group">
-                                    <select id="model-select" class="form-select">
+                                    <select id="model-select" class="form-select form-select-lg">
                                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                                     </select>
                                     <button class="btn btn-outline-secondary" onclick="fetchModels()">
@@ -102,6 +132,48 @@
                             <div class="mb-3">
                                 <label class="form-label text-muted small">Mot de passe</label>
                                 <input type="password" id="online_password" class="form-control" placeholder="Mot de passe">
+                            </div>
+                        </div>
+                        <!-- Email Tab -->
+                        <div class="tab-pane fade" id="tab-email">
+                            <div class="p-3 bg-light rounded-3 text-center mb-4">
+                                <i class="bi bi-envelope-at fs-1 text-success mb-2"></i>
+                                <h6 class="fw-bold">Récupération des Emails</h6>
+                                <p class="small text-muted mb-3">Vérifier manuellement les nouveaux emails et traiter les PDFs.</p>
+                                <button type="button" class="btn btn-outline-success w-100 d-flex align-items-center justify-content-center gap-2" onclick="triggerEmailFetch(this)">
+                                    <i class="bi bi-arrow-repeat"></i> Récupérer Emails
+                                </button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Serveur IMAP</label>
+                                <input type="text" id="email_imap_server" class="form-control" placeholder="ex: ssl0.ovh.net">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted small">Utilisateur Email</label>
+                                    <input type="text" id="email_user" class="form-control" placeholder="votre@email.com">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted small">Mot de passe Email</label>
+                                    <input type="password" id="email_pass" class="form-control" placeholder="Mot de passe">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Dossier Email (IMAP)</label>
+                                <input type="text" id="email_folder" class="form-control" placeholder="INBOX">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Filtrer par Expéditeur</label>
+                                <input type="text" id="email_sender_filter" class="form-control" placeholder="ex: labo.ibnsina17@gmail.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Filtrer par Objet (Subject)</label>
+                                <input type="text" id="email_subject_filter" class="form-control" placeholder="ex: Compte Rendu">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Intervalle de récupération (minutes)</label>
+                                <input type="number" id="email_fetch_interval" class="form-control" min="1" max="1440">
+                                <small class="text-muted" style="font-size: 0.7rem;">Fréquence de vérification des nouveaux emails.</small>
                             </div>
                         </div>
                         <!-- Lab Tab -->
@@ -135,10 +207,26 @@
                         </div>
                         <!-- Maintenance Tab -->
                         <div class="tab-pane fade" id="tab-maintenance">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Dossier de Sauvegarde</label>
+                                <div class="input-group">
+                                    <input type="text" id="backup_dir_input" class="form-control" placeholder="Par défaut: ./backups">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="testBackupDir()">
+                                        <i class="bi bi-hdd-network"></i> Tester
+                                    </button>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.7rem;">Laissez vide pour utiliser le dossier par défaut. Vous pouvez utiliser un chemin réseau (ex: \\\\SERVEUR\\Partage\\Sauvegardes).</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Nombre maximum de sauvegardes</label>
+                                <input type="number" id="max_backups_input" class="form-control" min="1" max="100">
+                                <small class="text-muted" style="font-size: 0.7rem;">Les sauvegardes plus anciennes seront supprimées.</small>
+                            </div>
+                            <hr class="my-4">
                             <div class="p-3 bg-light rounded-3 text-center mb-3">
                                 <i class="bi bi-safe fs-1 text-primary mb-2"></i>
                                 <h6 class="fw-bold">Sauvegarde de la Base de Données</h6>
-                                <p class="small text-muted mb-3">Créez une copie de sécurité manuelle de vos données.</p>
+                                <p class="small text-muted mb-3">Créez une copie de sécurité ZIP manuelle de vos données.</p>
                                 <button type="button" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2" onclick="triggerBackup(this)">
                                     <i class="bi bi-cloud-arrow-up-fill"></i> Lancer la Sauvegarde
                                 </button>
@@ -251,19 +339,6 @@
                 </a>
             </div>
             <div class="col-md-2" style="width: 20%;">
-                <a href="{{ url_for('dashboard.dashboard', liste_id=selected_liste_id, q=search_query, status='not_printed') }}" class="text-decoration-none">
-                    <div class="stat-card stat-not-printed {% if status_filter == 'not_printed' %}active{% endif %}" id="stat-not-printed-card">
-                        <div class="stat-icon">
-                            <i class="bi bi-exclamation-circle-fill"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Non Traité</div>
-                            <div class="stat-value text-danger" id="stat-not-printed-value">{{ stats.not_printed }}</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-2" style="width: 20%;">
                 <a href="{{ url_for('dashboard.dashboard', liste_id=selected_liste_id, q=search_query, status='printed') }}" class="text-decoration-none">
                     <div class="stat-card stat-printed {% if status_filter == 'printed' %}active{% endif %}" id="stat-printed-card">
                         <div class="stat-icon">
@@ -272,6 +347,19 @@
                         <div class="stat-content">
                             <div class="stat-label">Traité</div>
                             <div class="stat-value" id="stat-printed-value">{{ stats.printed }}</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-2" style="width: 20%;">
+                <a href="{{ url_for('dashboard.dashboard', liste_id=selected_liste_id, q=search_query, status='not_printed') }}" class="text-decoration-none">
+                    <div class="stat-card {% if stats.not_printed > 0 %}stat-not-printed{% endif %} {% if status_filter == 'not_printed' %}active{% endif %}" id="stat-not-printed-card">
+                        <div class="stat-icon">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Non Traité</div>
+                            <div class="stat-value {% if stats.not_printed > 0 %}text-danger{% endif %}" id="stat-not-printed-value">{{ stats.not_printed }}</div>
                         </div>
                     </div>
                 </a>
@@ -1021,7 +1109,16 @@
                 lab_addr_l2: document.getElementById('lab_addr_l2').value,
                 lab_tel: document.getElementById('lab_tel').value,
                 lab_fax: document.getElementById('lab_fax').value,
-                lab_mobile: document.getElementById('lab_mobile').value
+                lab_mobile: document.getElementById('lab_mobile').value,
+                backup_dir: document.getElementById('backup_dir_input').value,
+                max_backups: parseInt(document.getElementById('max_backups_input').value) || 10,
+                email_imap_server: document.getElementById('email_imap_server').value,
+                email_user: document.getElementById('email_user').value,
+                email_pass: document.getElementById('email_pass').value,
+                email_folder: document.getElementById('email_folder').value,
+                email_sender_filter: document.getElementById('email_sender_filter').value,
+                email_subject_filter: document.getElementById('email_subject_filter').value,
+                email_fetch_interval: parseInt(document.getElementById('email_fetch_interval').value) || 60
             };
             fetch('/api/config', {
                 method: 'POST',
@@ -1067,6 +1164,82 @@
                 });
         }
 
+        function testBackupDir() {
+            const path = document.getElementById('backup_dir_input').value;
+            fetch('/api/test-backup-dir', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ path: path })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                    } else {
+                        alert("Erreur: " + data.error);
+                    }
+                })
+                .catch(err => {
+                    alert("Erreur lors du test de connexion.");
+                });
+        }
+
+        /* --- Notification Logic --- */
+        let unreadCount = 0;
+
+        function fetchNotifications() {
+            fetch('/api/notifications')
+                .then(res => res.json())
+                .then(data => {
+                    const badge = document.getElementById('notification-badge');
+                    const itemsContainer = document.getElementById('notification-items');
+                    
+                    unreadCount = data.length;
+                    
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount;
+                        badge.classList.remove('d-none');
+                        
+                        let html = '';
+                        data.forEach(notif => {
+                            const icon = notif.type === 'new_patient' ? 'bi-person-plus-fill text-primary' : 'bi-check-circle-fill text-success';
+                            const date = new Date(notif.created_at).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                            
+                            html += `
+                                <li class="p-2 border-bottom hover-bg">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="bi ${icon} mt-1"></i>
+                                        <div>
+                                            <div class="small fw-bold">${notif.message}</div>
+                                            <div class="text-muted" style="font-size: 0.7rem;">${date}</div>
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+                        });
+                        itemsContainer.innerHTML = html;
+                    } else {
+                        badge.classList.add('d-none');
+                        itemsContainer.innerHTML = `
+                            <li class="p-4 text-center text-muted small">
+                                <i class="bi bi-bell-slash d-block fs-2 mb-2 opacity-50"></i>
+                                Aucune nouvelle notification
+                            </li>
+                        `;
+                    }
+                });
+        }
+
+        function markNotificationsRead() {
+            if (unreadCount === 0) return;
+            
+            fetch('/api/notifications/read', { method: 'POST' })
+                .then(() => {
+                    unreadCount = 0;
+                    document.getElementById('notification-badge').classList.add('d-none');
+                });
+        }
+
         /* --- Backup Logic --- */
         function triggerBackup(btn) {
             const originalHTML = btn.innerHTML;
@@ -1087,6 +1260,57 @@
                     btn.disabled = false;
                     btn.innerHTML = originalHTML;
                     alert("Erreur de connexion lors de la sauvegarde.");
+                });
+        }
+
+        function triggerEmailFetch(btn) {
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Récupération...';
+            
+            fetch("/api/trigger-email-fetch", { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    if (data.success) {
+                        alert("La récupération des emails est terminée !");
+                        window.location.reload();
+                    } else {
+                        alert("Erreur : " + (data.error || "La récupération a échoué"));
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    alert("Erreur de connexion lors de la récupération des emails.");
+                });
+        }
+
+        function triggerQuickEmailFetch(btn) {
+            const icon = document.getElementById('quick-fetch-icon');
+            if (icon.classList.contains('spin-animation')) return;
+
+            icon.classList.add('spin-animation');
+            
+            fetch("/api/trigger-email-fetch", { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    icon.classList.remove('spin-animation');
+                    if (data.success) {
+                        if (data.count > 0) {
+                            fetchNotifications();
+                        } else {
+                            alert("Aucun nouvel e-mail trouvé.");
+                        }
+                    } else {
+                        alert("Erreur : " + (data.error || "La récupération a échoué"));
+                    }
+                })
+                .catch(err => {
+                    icon.classList.remove('spin-animation');
+                    console.error("Quick fetch error:", err);
+                    alert("Erreur de connexion lors de la récupération des emails.");
                 });
         }
 
@@ -1124,6 +1348,10 @@
 
         /* --- Initialization --- */
         document.addEventListener('DOMContentLoaded', function() {
+            // Notification Polling
+            fetchNotifications();
+            setInterval(fetchNotifications, 60000); // Poll every minute
+
             // Theme Initialization
             const savedTheme = localStorage.getItem('theme') || 'light';
             updateThemeIcon(savedTheme);
@@ -1157,6 +1385,15 @@
                             const telInput = document.getElementById('lab_tel');
                             const faxInput = document.getElementById('lab_fax');
                             const mobileInput = document.getElementById('lab_mobile');
+                            const backupDirInput = document.getElementById('backup_dir_input');
+                            const maxBackupsInput = document.getElementById('max_backups_input');
+                            const emailImapInput = document.getElementById('email_imap_server');
+                            const emailUserInput = document.getElementById('email_user');
+                            const emailPassInput = document.getElementById('email_pass');
+                            const emailFolderInput = document.getElementById('email_folder');
+                            const emailSenderInput = document.getElementById('email_sender_filter');
+                            const emailSubjectInput = document.getElementById('email_subject_filter');
+                            const emailIntervalInput = document.getElementById('email_fetch_interval');
                             const select = document.getElementById('model-select');
                             
                             if (apiKeyInput) apiKeyInput.value = data.api_key || '';
@@ -1168,6 +1405,15 @@
                             if (telInput) telInput.value = data.lab_tel || '';
                             if (faxInput) faxInput.value = data.lab_fax || '';
                             if (mobileInput) mobileInput.value = data.lab_mobile || '';
+                            if (backupDirInput) backupDirInput.value = data.backup_dir || '';
+                            if (maxBackupsInput) maxBackupsInput.value = data.max_backups || 10;
+                            if (emailImapInput) emailImapInput.value = data.email_imap_server || '';
+                            if (emailUserInput) emailUserInput.value = data.email_user || '';
+                            if (emailPassInput) emailPassInput.value = data.email_pass || '';
+                            if (emailFolderInput) emailFolderInput.value = data.email_folder || 'INBOX';
+                            if (emailSenderInput) emailSenderInput.value = data.email_sender_filter || '';
+                            if (emailSubjectInput) emailSubjectInput.value = data.email_subject_filter || '';
+                            if (emailIntervalInput) emailIntervalInput.value = data.email_fetch_interval || 60;
                             
                             if (select) {
                                 const modelMap = {

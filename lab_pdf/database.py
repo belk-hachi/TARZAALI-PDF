@@ -212,7 +212,21 @@ def init_db():
         )
         ''')
 
-    conn.commit()
+        # 4. Notifications table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
+            patient_id INTEGER,
+            message TEXT NOT NULL,
+            is_read INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
+        )
+        ''')
+
+        conn.commit()
+
     conn.close()
     logger.info("Database initialized successfully")
 
@@ -306,6 +320,14 @@ def save_extraction_result(extraction_result, original_filename=None,
         )
 
     conn.commit()
+    
+    # Create notification for new list
+    create_notification(
+        "new_patient",
+        f"{list_number} importee, {len(patients)} patient ajoute",
+        conn=conn
+    )
+
     return liste_id
 
 
@@ -692,6 +714,62 @@ def update_patient_identity(patient_id, new_last_name, new_first_name,
 
     except Exception as e:
         return False, str(e)
+
+
+# ─── Notifications ──────────────────────────────────────────────────────────
+
+def create_notification(ntype, message, patient_id=None, conn=None):
+    """Create a new notification.
+
+    Args:
+        ntype: Type of notification ('new_patient', 'status_changed').
+        message: The notification message.
+        patient_id: Optional ID of the related patient.
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
+    conn.execute(
+        "INSERT INTO notifications (type, message, patient_id) VALUES (?, ?, ?)",
+        (ntype, message, patient_id)
+    )
+    conn.commit()
+
+
+def get_unread_notifications(conn=None):
+    """Get all unread notifications, newest first.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
+    return conn.execute(
+        "SELECT * FROM notifications WHERE is_read = 0 ORDER BY created_at DESC"
+    ).fetchall()
+
+
+def mark_notifications_read(conn=None):
+    """Mark all notifications as read.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
+    conn.execute("UPDATE notifications SET is_read = 1")
+    conn.commit()
+
+
+def clear_old_notifications(days=7, conn=None):
+    """Delete read notifications older than X days.
+
+    Args:
+        conn: Optional connection. Defaults to request-scoped get_db().
+    """
+    conn = conn or get_db()
+    conn.execute(
+        "DELETE FROM notifications WHERE is_read = 1 AND created_at < datetime('now', ?)",
+        (f'-{days} days',)
+    )
+    conn.commit()
 
 
 # ─── Dashboard Stats ───────────────────────────────────────────────────────

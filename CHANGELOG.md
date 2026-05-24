@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-23] - Backup System, Notifications & Email Integration
+
+### Added
+- **Compressed ZIP Backups**: Backups are now created as single `.zip` archives containing the database, config, and all patient uploads, significantly saving disk space.
+- **Custom Backup Paths**: Users can now configure a custom directory for backups (including Windows network paths like `\\SERVER\Share`) via the settings.
+- **Backup Connectivity Test**: Added a "Tester" button in the Maintenance tab to verify that the configured backup directory is accessible and writable.
+- **Real-Time Notification Engine**: 
+    - Integrated a "Mail" notification icon in the topbar with a dynamic red badge.
+    - Automatic notifications for new imports: `[LIST_NUMBER] importee, [X] patient ajoute`.
+    - Automatic status notifications: `resultat de [NOM PRENOM] est termine` when results are ready online.
+- **Background Email Fetcher**:
+    - Periodically (every 1h by default) fetches results from OVH/Gmail IMAP servers.
+    - Filters by sender (`labo.ibnsina17@gmail.com`) and subject (`Compte Rendu`).
+    - Merges multiple PDF attachments into a single file, prioritizing "Mail" documents.
+    - Automatically processes fetched PDFs with AI and adds them to the dashboard.
+- **Quick Fetch Button**: Added a refresh icon next to notifications for instant background email retrieval with a spinning animation indicator.
+- **Status Poller Service**: Implemented a background service that polls the external lab API for "En cours" patients and updates them to "Terminé" automatically.
+
+### Changed
+- **UI/UX Refinement**:
+    - **Reorganized Settings**: Renamed the email tab to "Récupération E-mail" and moved the manual fetch button to the top of this tab.
+    - **Optimized Stats Order**: Moved the "Traité" card before "Non Traité" for better workflow alignment.
+    - **Visual Warnings**: The "Non Traité" card now glows red only when the count is greater than 0; otherwise, it remains neutral.
+    - **Increased Modal Width**: Expanded the settings and upload modals to 650px for better readability.
+    - **Clickable Branding**: The application logo and "TARZALI" name now redirect to the main dashboard.
+- **Enhanced Configuration**: Added obfuscation support for email passwords and expanded the `Config` class to handle all new email and backup parameters.
+
+### Fixed
+- **Settings Save Issue**: Fixed a bug where missing UI fields for login credentials prevented settings from being saved correctly.
+- **Model Selection UI**: Increased the size of the IA model dropdown for better visibility.
+
+---
+
 ## [2026-05-23] - Patient Edit Functionality
 
 ### Added

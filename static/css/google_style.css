@@ -290,6 +290,41 @@ tr.printed .badge:not(.badge-printed) {
     white-space: nowrap !important;
 }
 
+.stat-card.stat-not-printed {
+    border-color: var(--google-red) !important;
+}
+
+.stat-card.stat-not-printed .stat-icon {
+    background-color: var(--google-red-tint) !important;
+    color: var(--google-red) !important;
+}
+
+.stat-card.stat-not-printed.active {
+    background-color: var(--google-red-tint) !important;
+    box-shadow: 0 0 0 1px var(--google-red) !important;
+}
+
+.stat-card.stat-not-printed.active .stat-label {
+    color: var(--google-red) !important;
+}
+
+.stat-card.stat-not-printed .stat-value {
+    color: var(--google-red) !important;
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
+
+.spin-animation {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* 5. Interactive Elements */
 .btn-sm {
     padding: 4px 8px !important;
@@ -423,6 +458,10 @@ tr.printed .badge:not(.badge-printed) {
 }
 
 /* 8. Modals & Forms */
+.modal {
+    --bs-modal-width: 650px;
+}
+
 .modal-content {
     background-color: var(--bg-surface) !important;
     border-radius: 24px !important;

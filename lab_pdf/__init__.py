@@ -76,6 +76,15 @@ def create_app():
         app.logger.error("Startup backup failed: %s", e)
 
     # Start periodic backup scheduler
+    from .backup_service import backup_scheduler
     backup_scheduler.start()
+
+    # Start periodic email fetcher scheduler
+    from .email_service import email_fetcher_scheduler
+    email_fetcher_scheduler.start()
+
+    # Start periodic status poller scheduler
+    from .status_service import status_poller_scheduler
+    status_poller_scheduler.start()
 
     return app

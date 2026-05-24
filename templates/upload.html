@@ -17,11 +17,11 @@
 </head>
 <body class="upload-card-container">
     <div class="upload-card">
-        <div class="text-center mb-4">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="text-decoration-none text-center d-block mb-4">
             <h2 class="fw-bold text-primary mb-1">TARZALI</h2>
             <h5 class="fw-semibold text-muted">Traitement de Listes PDF</h5>
             <p class="text-muted small mt-2">Extraire automatiquement les dossiers patients avec l'IA Gemini</p>
-        </div>
+        </a>
 
         {% if error %}
         <div class="alert alert-danger mb-4" role="alert" id="server-error">

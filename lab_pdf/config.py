@@ -102,6 +102,15 @@ class Config:
         "lab_tel": "027902479",
         "lab_fax": "027902479",
         "lab_mobile": "0671013704",
+        "backup_dir": "",
+        "max_backups": 10,
+        "email_imap_server": "ssl0.ovh.net",
+        "email_user": "",
+        "email_pass": "",
+        "email_folder": "INBOX",
+        "email_sender_filter": "labo.ibnsina17@gmail.com",
+        "email_subject_filter": "Compte Rendu",
+        "email_fetch_interval": 60,
     }
 
     def __init__(self):
@@ -123,10 +132,14 @@ class Config:
             try:
                 with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    # De-obscure password before returning to app
+                    # De-obscure passwords before returning to app
                     if data.get("online_password"):
                         data["online_password"] = deobscure_password(
                             data["online_password"]
+                        )
+                    if data.get("email_pass"):
+                        data["email_pass"] = deobscure_password(
+                            data["email_pass"]
                         )
                     # Ensure online_api_key has a default if missing from old configs
                     if "online_api_key" not in data:
@@ -158,6 +171,10 @@ class Config:
         if to_save.get("online_password"):
             to_save["online_password"] = obscure_password(
                 to_save["online_password"]
+            )
+        if to_save.get("email_pass"):
+            to_save["email_pass"] = obscure_password(
+                to_save["email_pass"]
             )
 
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:

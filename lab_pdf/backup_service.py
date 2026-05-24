@@ -28,57 +28,71 @@ DEFAULT_INTERVAL_SECONDS = 86400  # 24 hours (86400 seconds)
 
 
 def create_backup():
-    """Create a timestamped backup of the database, config, and uploads.
+    """Create a timestamped ZIP backup of the database, config, and uploads.
 
     Uses SQLite's hot backup API for the database to ensure consistency
-    without locking or stopping the application. File copies are used
-    for config.json and the uploads folder.
+    without locking or stopping the application. Everything is collected
+    into a temporary directory and then compressed into a ZIP archive.
 
     Returns:
-        The backup directory path, or None on failure.
+        The backup ZIP file path, or None on failure.
     """
+    config = app_config.load()
+    custom_backup_dir = config.get("backup_dir")
+    effective_backup_dir = custom_backup_dir if custom_backup_dir and os.path.exists(custom_backup_dir) else BACKUP_DIR
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_dir = os.path.join(BACKUP_DIR, f"backup_{timestamp}")
+    # Base name for the ZIP (without extension)
+    backup_base_name = f"backup_{timestamp}"
+    # Full path to the final ZIP
+    zip_path = os.path.join(effective_backup_dir, f"{backup_base_name}.zip")
+    # Temporary directory for staging files
+    staging_dir = os.path.join(effective_backup_dir, f"tmp_{timestamp}")
 
     try:
-        os.makedirs(backup_dir, exist_ok=True)
+        os.makedirs(effective_backup_dir, exist_ok=True)
+        os.makedirs(staging_dir, exist_ok=True)
 
         # 1. Backup database using SQLite hot backup API
-        backup_db_path = os.path.join(backup_dir, "lab.db")
+        backup_db_path = os.path.join(staging_dir, "lab.db")
         _backup_database(backup_db_path)
 
         # 2. Backup config.json
         if os.path.exists(CONFIG_FILE):
-            shutil.copy2(CONFIG_FILE, os.path.join(backup_dir, "config.json"))
+            shutil.copy2(CONFIG_FILE, os.path.join(staging_dir, "config.json"))
 
         # 3. Backup uploads folder
-        # NOTE: dirs_exist_ok requires Python 3.8+ (guaranteed by
-        # Flask 3.0 dependency). Do NOT remove this parameter — without
-        # it, copytree fails if the uploads subdirectory already exists
-        # from a previous partial backup.
         if os.path.exists(UPLOAD_DIR):
             shutil.copytree(
                 UPLOAD_DIR,
-                os.path.join(backup_dir, "uploads"),
+                os.path.join(staging_dir, "uploads"),
                 dirs_exist_ok=True,
             )
 
-        logger.info("Backup created: %s", backup_dir)
+        # 4. Compress the staging directory into a ZIP
+        shutil.make_archive(
+            os.path.join(effective_backup_dir, backup_base_name),
+            'zip',
+            staging_dir
+        )
+
+        logger.info("Backup created: %s", zip_path)
 
         # Prune old backups
-        _prune_old_backups()
+        _prune_old_backups(effective_backup_dir)
 
-        return backup_dir
+        return zip_path
 
     except Exception as e:
         logger.error("Backup failed: %s", e)
-        # Clean up partial backup
-        if os.path.exists(backup_dir):
+        return None
+    finally:
+        # Clean up staging directory
+        if os.path.exists(staging_dir):
             try:
-                shutil.rmtree(backup_dir)
+                shutil.rmtree(staging_dir)
             except Exception:
                 pass
-        return None
 
 
 def _backup_database(backup_path):
@@ -98,35 +112,39 @@ def _backup_database(backup_path):
         src_conn.close()
 
 
-def _prune_old_backups():
+def _prune_old_backups(backup_dir):
     """Remove old backups beyond the configured maximum.
 
     Reads max_backups from config, falls back to DEFAULT_MAX_BACKUPS.
-    Backups are sorted by name (which includes timestamp) and the
+    Backups (both folders and ZIPs) are sorted by name and the
     oldest are deleted first.
     """
     config = app_config.load()
     max_backups = config.get("max_backups", DEFAULT_MAX_BACKUPS)
 
-    if not os.path.exists(BACKUP_DIR):
+    if not os.path.exists(backup_dir):
         return
 
-    # List backup directories sorted by name (=timestamp) ascending
+    # List backup files/dirs sorted by name (=timestamp) ascending
     backups = sorted(
-        d for d in os.listdir(BACKUP_DIR)
-        if d.startswith("backup_") and os.path.isdir(
-            os.path.join(BACKUP_DIR, d)
+        d for d in os.listdir(backup_dir)
+        if d.startswith("backup_") and (
+            os.path.isdir(os.path.join(backup_dir, d)) or
+            d.endswith(".zip")
         )
     )
 
     # Delete oldest backups beyond the limit
     while len(backups) > max_backups:
-        old_dir = os.path.join(BACKUP_DIR, backups.pop(0))
+        old_item = os.path.join(backup_dir, backups.pop(0))
         try:
-            shutil.rmtree(old_dir)
-            logger.info("Pruned old backup: %s", old_dir)
+            if os.path.isdir(old_item):
+                shutil.rmtree(old_item)
+            else:
+                os.remove(old_item)
+            logger.info("Pruned old backup: %s", old_item)
         except Exception as e:
-            logger.error("Failed to prune backup %s: %s", old_dir, e)
+            logger.error("Failed to prune backup %s: %s", old_item, e)
 
 
 class BackupScheduler:
