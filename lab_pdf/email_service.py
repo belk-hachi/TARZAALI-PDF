@@ -134,6 +134,11 @@ def fetch_and_process_emails():
                 
                 activity_logger.info(f"Fusion réussie: {final_filename} ({len(downloaded_files)} PDFs)")
 
+                # 4. DELETE EMAIL immediately after successful merge/fetch
+                mail.store(e_id, '+FLAGS', '\\Deleted')
+                activity_logger.info(f"Email supprimé (ID: {e_id.decode()})")
+                processed_count += 1
+
                 # 3. Process with AI
                 try:
                     model = config.get("model", "gemini-2.5-flash")
@@ -149,11 +154,6 @@ def fetch_and_process_emails():
                     )
                     patient_count = len(extraction_result.get("patients", []))
                     activity_logger.info(f"IA Succès: {final_filename} -> {patient_count} patients ajoutés")
-                    
-                    # 4. DELETE EMAIL after successful processing
-                    mail.store(e_id, '+FLAGS', '\\Deleted')
-                    activity_logger.info(f"Email supprimé (ID: {e_id.decode()})")
-                    processed_count += 1
                     
                 except Exception as e:
                     activity_logger.error(f"IA Échec pour {final_filename}: {e}")

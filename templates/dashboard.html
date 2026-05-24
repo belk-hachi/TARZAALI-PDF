@@ -1194,21 +1194,30 @@
                     const badge = document.getElementById('notification-badge');
                     const itemsContainer = document.getElementById('notification-items');
                     
-                    unreadCount = data.length;
+                    const unread = data.filter(n => n.is_read === 0);
+                    unreadCount = unread.length;
                     
-                    if (unreadCount > 0) {
-                        badge.textContent = unreadCount;
-                        badge.classList.remove('d-none');
+                    if (data.length > 0) {
+                        if (unreadCount > 0) {
+                            badge.textContent = unreadCount;
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
                         
                         let html = '';
                         data.forEach(notif => {
-                            const icon = notif.type === 'new_patient' ? 'bi-person-plus-fill text-primary' : 'bi-check-circle-fill text-success';
+                            const isRead = notif.is_read === 1;
+                            const textClass = isRead ? 'text-muted opacity-75' : '';
+                            const iconColor = isRead ? 'text-muted' : (notif.type === 'new_patient' ? 'text-primary' : 'text-success');
+                            const icon = notif.type === 'new_patient' ? 'bi-person-plus-fill' : 'bi-check-circle-fill';
                             const date = new Date(notif.created_at).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                            
-                            html += `
-                                <li class="p-2 border-bottom hover-bg">
-                                    <div class="d-flex align-items-start gap-2">
-                                        <i class="bi ${icon} mt-1"></i>
+
+                            // Build notification HTML
+                            let notifContent = `
+                                <li class="p-2 border-bottom hover-bg ${isRead ? 'bg-light-subtle' : ''}">
+                                    <div class="d-flex align-items-start gap-2 ${textClass}">
+                                        <i class="bi ${icon} ${iconColor} mt-1"></i>
                                         <div>
                                             <div class="small fw-bold">${notif.message}</div>
                                             <div class="text-muted" style="font-size: 0.7rem;">${date}</div>
@@ -1216,13 +1225,30 @@
                                     </div>
                                 </li>
                             `;
+
+                            // Wrap in link based on type
+                            if (notif.type === 'new_patient' && notif.liste_id) {
+                                html += `
+                                    <a href="/dashboard?liste_id=${notif.liste_id}" class="text-decoration-none text-reset">
+                                        ${notifContent}
+                                    </a>
+                                `;
+                            } else if (notif.patient_id) {
+                                html += `
+                                    <a href="/patient/${notif.patient_id}" class="text-decoration-none text-reset">
+                                        ${notifContent}
+                                    </a>
+                                `;
+                            } else {
+                                html += notifContent;
+                            }
                         });
                         itemsContainer.innerHTML = html;
                     } else {
                         badge.classList.add('d-none');
                         itemsContainer.innerHTML = `
                             <li class="p-4 text-center text-muted small">
-                                <i class="bi bi-bell-slash d-block fs-2 mb-2 opacity-50"></i>
+                                <i class="bi bi-envelope-open d-block fs-2 mb-2 opacity-50"></i>
                                 Aucune nouvelle notification
                             </li>
                         `;

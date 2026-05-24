@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-24] - Email Processing & Logging Enhancements
+
+### Added
+- **Specialized Activity Logging**: Created `logs/activity.log` to track email fetching, PDF merging, and AI extraction events.
+- **Log Retention**: Implemented a 7-day automatic cleanup policy for activity logs.
+- **Improved Email Cleanup**: Emails are now automatically deleted from the server immediately after their attachments are successfully downloaded and merged, ensuring no duplicate processing.
+
+---
+
 ## [2026-05-23] - Backup System, Notifications & Email Integration
 
 ### Added

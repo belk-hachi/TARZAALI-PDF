@@ -76,7 +76,7 @@ def poll_pending_status():
                         # Create notification
                         create_notification(
                             "status_changed",
-                            f"resultat de {p['last_name']} {p['first_name']} est termine",
+                            f"Resultat de {p['last_name']} {p['first_name']} est validé",
                             patient_id=p['id'],
                             conn=conn
                         )

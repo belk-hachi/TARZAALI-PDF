@@ -218,15 +218,22 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             type TEXT NOT NULL,
             patient_id INTEGER,
+            liste_id INTEGER,
             message TEXT NOT NULL,
             is_read INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
+            FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE,
+            FOREIGN KEY (liste_id) REFERENCES listes (id) ON DELETE CASCADE
         )
         ''')
 
-        conn.commit()
+        # Migration: Add liste_id column if missing
+        try:
+            cursor.execute("ALTER TABLE notifications ADD COLUMN liste_id INTEGER")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
+        conn.commit()
     conn.close()
     logger.info("Database initialized successfully")
 
@@ -325,6 +332,7 @@ def save_extraction_result(extraction_result, original_filename=None,
     create_notification(
         "new_patient",
         f"{list_number} importee, {len(patients)} patient ajoute",
+        liste_id=liste_id,
         conn=conn
     )
 
@@ -718,33 +726,35 @@ def update_patient_identity(patient_id, new_last_name, new_first_name,
 
 # ─── Notifications ──────────────────────────────────────────────────────────
 
-def create_notification(ntype, message, patient_id=None, conn=None):
+def create_notification(ntype, message, patient_id=None, liste_id=None, conn=None):
     """Create a new notification.
 
     Args:
         ntype: Type of notification ('new_patient', 'status_changed').
         message: The notification message.
         patient_id: Optional ID of the related patient.
+        liste_id: Optional ID of the related liste.
         conn: Optional connection. Defaults to request-scoped get_db().
     """
     conn = conn or get_db()
     conn.execute(
-        "INSERT INTO notifications (type, message, patient_id) VALUES (?, ?, ?)",
-        (ntype, message, patient_id)
+        "INSERT INTO notifications (type, message, patient_id, liste_id) VALUES (?, ?, ?, ?)",
+        (ntype, message, patient_id, liste_id)
     )
     conn.commit()
 
 
 def get_unread_notifications(conn=None):
-    """Get all unread notifications, newest first.
-
-    Args:
-        conn: Optional connection. Defaults to request-scoped get_db().
+    """Get notifications to display.
+    Includes all unread ones, plus read ones from the last 24 hours.
     """
     conn = conn or get_db()
-    return conn.execute(
-        "SELECT * FROM notifications WHERE is_read = 0 ORDER BY created_at DESC"
-    ).fetchall()
+    return conn.execute("""
+        SELECT * FROM notifications 
+        WHERE is_read = 0 
+           OR (is_read = 1 AND created_at > datetime('now', '-1 day'))
+        ORDER BY created_at DESC
+    """).fetchall()
 
 
 def mark_notifications_read(conn=None):
