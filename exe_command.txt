@@ -1,6 +1,0 @@
- pyinstaller --noconfirm --onefile --windowed `
-     --add-data "logo.jpg;." `
-     --add-data "templates;templates" `
-     --add-data "static;static" `
-     --name "TARZALI-PDF" `
-     app.py
