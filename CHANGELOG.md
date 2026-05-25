@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-25] - Dashboard Display Optimization
+
+### Changed
+- **Conditional Patient Metadata**: Improved the patient list view by conditionally showing list information.
+    - **Specific List View**: Hidden the redundant list number under the patient name.
+    - **All Patients View**: Displaying both list number and list date under the patient name for better context.
+
 ## [2026-05-24] - Dashboard UI Refactoring & JS Modularization
 
 ### Added
