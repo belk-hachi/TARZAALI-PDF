@@ -455,7 +455,9 @@
                                                 </span>
                                                 {% endif %}
                                             </div>
-                                            <div class="small text-muted">{{ patient.list_number }}</div>
+                                            {% if not selected_liste_id %}
+                                            <div class="small text-muted">{{ patient.list_number }} - {{ patient.liste_date }}</div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </td>
