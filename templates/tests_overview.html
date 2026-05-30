@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aperçu des Tests - Lab PDF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/google_style.css') }}">
+    <style>
+        .table-container {
+            margin-top: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .abnormal-badge {
+            background-color: #fce8e6;
+            color: #d93025;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard.dashboard') }}">
+                <i class="bi bi-arrow-left"></i> Retour au Dashboard
+            </a>
+            <span class="navbar-text text-white">
+                Aperçu des Tests 
+                {% if selected_liste %}
+                    - Liste {{ selected_liste.list_number }} ({{ selected_liste.liste_date }})
+                {% else %}
+                    - Toutes les listes
+                {% endif %}
+            </span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="table-container">
+            <h2 class="mb-4">Récapitulatif des Tests</h2>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom du Test</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Complétés</th>
+                            <th class="text-center">En attente</th>
+                            <th class="text-center">Anormaux</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in overview %}
+                        <tr>
+                            <td><strong>{{ row.test_name }}</strong></td>
+                            <td class="text-center">{{ row.total }}</td>
+                            <td class="text-center text-success">{{ row.completed }}</td>
+                            <td class="text-center text-warning">{{ row.pending }}</td>
+                            <td class="text-center">
+                                {% if row.abnormal > 0 %}
+                                    <span class="abnormal-badge">{{ row.abnormal }}</span>
+                                {% else %}
+                                    <span class="text-muted">0</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                Aucun test trouvé dans la base de données.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

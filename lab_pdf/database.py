@@ -233,9 +233,111 @@ def init_db():
     except sqlite3.OperationalError:
         pass  # Column already exists
 
+    # 5. Subtests table for fine-grained analysis
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS subtests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER,
+        test_name TEXT,
+        subtest_name TEXT,
+        result TEXT,
+        unit TEXT,
+        is_abnormal INTEGER,
+        status TEXT,
+        FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
+    )
+    ''')
+
     conn.commit()
     conn.close()
+
+    # Phase 2 — Backfill
+    backfill_subtests()
+
     logger.info("Database initialized successfully")
+
+
+def backfill_subtests():
+    """Populate the subtests table from existing patient_json data.
+    Only processes patients that have no entries in the subtests table.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Find patients with no subtests recorded
+    cursor.execute("""
+        SELECT id, patient_json FROM patients
+        WHERE id NOT IN (SELECT DISTINCT patient_id FROM subtests)
+    """)
+    rows = cursor.fetchall()
+
+    if not rows:
+        conn.close()
+        return
+
+    logger.info(f"Backfilling subtests for {len(rows)} patients...")
+
+    for row in rows:
+        patient_id = row['id']
+        try:
+            patient_data = json.loads(row['patient_json'])
+            tests = patient_data.get("tests", [])
+            for test in tests:
+                test_name = test.get("name", "Unknown")
+                subtests = test.get("subTests", [])
+                for sub in subtests:
+                    cursor.execute(
+                        """INSERT INTO subtests
+                           (patient_id, test_name, subtest_name, result,
+                            unit, is_abnormal, status)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                        (
+                            patient_id,
+                            test_name,
+                            sub.get("name"),
+                            sub.get("result"),
+                            sub.get("unit"),
+                            1 if sub.get("isAbnormal") else 0,
+                            sub.get("status", "completed")
+                        )
+                    )
+        except Exception as e:
+            logger.error(f"Failed to backfill subtests for patient {patient_id}: {e}")
+
+    conn.commit()
+    conn.close()
+
+
+def get_tests_overview(liste_id=None, conn=None):
+    """Get aggregate stats for subtests, grouped by test_name.
+    
+    Returns a list of dicts with: test_name, total, completed,
+    pending, abnormal.
+    """
+    conn = conn or get_db()
+    cursor = conn.cursor()
+
+    params = []
+    where_clause = ""
+    if liste_id:
+        where_clause = "JOIN patients p ON s.patient_id = p.id WHERE p.liste_id = ?"
+        params.append(liste_id)
+
+    query = f"""
+        SELECT 
+            s.test_name,
+            COUNT(*) as total,
+            SUM(CASE WHEN s.status = 'completed' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN s.status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN s.is_abnormal = 1 THEN 1 ELSE 0 END) as abnormal
+        FROM subtests s
+        {where_clause}
+        GROUP BY s.test_name
+        ORDER BY total DESC
+    """
+    
+    cursor.execute(query, params)
+    return cursor.fetchall()
 
 
 # ─── Liste Operations ───────────────────────────────────────────────────────

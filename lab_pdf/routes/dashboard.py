@@ -13,7 +13,7 @@ from ..database import (
     get_all_listes, get_dashboard_stats, get_patients, count_patients,
     mark_patient_printed, unmark_patient_printed, update_patient_notes,
     update_patient_identity, delete_patient, delete_liste_if_empty,
-    get_liste_by_id,
+    get_liste_by_id, get_tests_overview,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,6 +65,23 @@ def dashboard():
         total_pages=total_pages,
         total_count=total_count,
         stats=stats,
+    )
+
+
+@dashboard_bp.route("/tests-overview")
+def tests_overview():
+    """Aggregate view of all subtests done across the database."""
+    liste_id = request.args.get("liste_id", type=int)
+    overview = get_tests_overview(liste_id=liste_id)
+    
+    # Get liste info if filtered
+    selected_liste = get_liste_by_id(liste_id) if liste_id else None
+    
+    return render_template(
+        "tests_overview.html",
+        overview=overview,
+        selected_liste=selected_liste,
+        selected_liste_id=liste_id
     )
 
 
