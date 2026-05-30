@@ -68,7 +68,7 @@ def dashboard():
     )
 
 
-@dashboard_bp.route("/tests-overview")
+@dashboard_bp.route("/tests")
 def tests_overview():
     """Aggregate view of all subtests done across the database."""
     liste_id = request.args.get("liste_id", type=int)

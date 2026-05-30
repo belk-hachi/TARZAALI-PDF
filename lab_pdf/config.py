@@ -233,12 +233,8 @@ class Config:
                     content = f.read()
 
             if not content.strip():
-                # Minimal fallback — the real prompt is in the bundled prompt.md
-                content = (
-                    "# Data extraction assistant for a medical laboratory.\n"
-                    "Extract patient and test result data from the PDF and "
-                    "return it as a single valid JSON object.\n"
-                )
+                logger.error("Critical error: prompt.md is missing or empty in bundled resources.")
+                content = "# ERROR: Prompt file not found or empty — extraction aborted\n"
 
             with open(PROMPT_PATH, "w", encoding="utf-8") as f:
                 f.write(content)

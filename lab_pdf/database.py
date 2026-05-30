@@ -264,6 +264,18 @@ def backfill_subtests():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Cleanup: If we have "Unknown" test names or NULL subtest names,
+    # it means a previous backfill failed to find the keys.
+    # We delete these patients' subtest records to re-process them.
+    cursor.execute("""
+        DELETE FROM subtests 
+        WHERE patient_id IN (
+            SELECT DISTINCT patient_id FROM subtests 
+            WHERE test_name = 'Unknown' OR subtest_name IS NULL
+        )
+    """)
+    conn.commit()
+
     # Find patients with no subtests recorded
     cursor.execute("""
         SELECT id, patient_json FROM patients
@@ -283,9 +295,12 @@ def backfill_subtests():
             patient_data = json.loads(row['patient_json'])
             tests = patient_data.get("tests", [])
             for test in tests:
-                test_name = test.get("name", "Unknown")
+                # Support both 'testName' (new) and 'name' (legacy/fallback)
+                test_name = test.get("testName") or test.get("name", "Unknown")
                 subtests = test.get("subTests", [])
                 for sub in subtests:
+                    # Support both 'subtestName' (new) and 'name' (legacy/fallback)
+                    subtest_name = sub.get("subtestName") or sub.get("name")
                     cursor.execute(
                         """INSERT INTO subtests
                            (patient_id, test_name, subtest_name, result,
@@ -294,7 +309,7 @@ def backfill_subtests():
                         (
                             patient_id,
                             test_name,
-                            sub.get("name"),
+                            subtest_name,
                             sub.get("result"),
                             sub.get("unit"),
                             1 if sub.get("isAbnormal") else 0,
@@ -309,10 +324,10 @@ def backfill_subtests():
 
 
 def get_tests_overview(liste_id=None, conn=None):
-    """Get aggregate stats for subtests, grouped by test_name.
+    """Get aggregate stats for subtests, grouped by test_name and subtest_name.
     
-    Returns a list of dicts with: test_name, total, completed,
-    pending, abnormal.
+    Returns a list of dicts with: test_name, subtest_name, total, 
+    completed, pending, abnormal.
     """
     conn = conn or get_db()
     cursor = conn.cursor()
@@ -326,14 +341,15 @@ def get_tests_overview(liste_id=None, conn=None):
     query = f"""
         SELECT 
             s.test_name,
+            s.subtest_name,
             COUNT(*) as total,
             SUM(CASE WHEN s.status = 'completed' THEN 1 ELSE 0 END) as completed,
             SUM(CASE WHEN s.status = 'pending' THEN 1 ELSE 0 END) as pending,
             SUM(CASE WHEN s.is_abnormal = 1 THEN 1 ELSE 0 END) as abnormal
         FROM subtests s
         {where_clause}
-        GROUP BY s.test_name
-        ORDER BY total DESC
+        GROUP BY s.test_name, s.subtest_name
+        ORDER BY s.test_name ASC, total DESC
     """
     
     cursor.execute(query, params)

@@ -49,20 +49,22 @@
                 <table class="table table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th>Nom du Test</th>
+                            <th>Groupe de Test</th>
+                            <th>Analyse Spécifique</th>
                             <th class="text-center">Total</th>
-                            <th class="text-center">Complétés</th>
-                            <th class="text-center">En attente</th>
-                            <th class="text-center">Anormaux</th>
+                            <th class="text-center text-success">Complétés</th>
+                            <th class="text-center text-warning">En cours</th>
+                            <th class="text-center text-danger">Anormaux</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for row in overview %}
                         <tr>
-                            <td><strong>{{ row.test_name }}</strong></td>
+                            <td class="text-muted small">{{ row.test_name }}</td>
+                            <td><strong>{{ row.subtest_name }}</strong></td>
                             <td class="text-center">{{ row.total }}</td>
-                            <td class="text-center text-success">{{ row.completed }}</td>
-                            <td class="text-center text-warning">{{ row.pending }}</td>
+                            <td class="text-center">{{ row.completed }}</td>
+                            <td class="text-center">{{ row.pending }}</td>
                             <td class="text-center">
                                 {% if row.abnormal > 0 %}
                                     <span class="abnormal-badge">{{ row.abnormal }}</span>
