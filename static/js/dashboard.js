@@ -19,11 +19,14 @@ function toggleTheme() {
     updateThemeIcon(newTheme);
 }
 
-function openEditPatientModal(id, lastName, firstName, dob) {
+function openEditPatientModal(id, lastName, firstName, dob, status) {
     document.getElementById('edit-patient-id').value = id;
     document.getElementById('edit-last-name').value = lastName;
     document.getElementById('edit-first-name').value = firstName;
     document.getElementById('edit-dob').value = dob;
+    if (document.getElementById('edit-status')) {
+        document.getElementById('edit-status').value = status || 'completed';
+    }
     new bootstrap.Modal(document.getElementById('editPatientModal')).show();
 }
 

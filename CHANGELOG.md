@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-31] - Extraction Reliability & Patient Management
+
+### Added
+- **Manual Status Management**: Added the ability to manually change a patient's status (Terminé, En cours, Rejeté) directly from the Edit Patient modal.
+- **Extraction Hardening**: Updated AI extraction logic to strictly enforce French medical terminology and improve the merging of results spanning multiple pages.
+
+### Changed
+- **Config Resilience**: Replaced generic fallback prompts with critical error logging in `config.py` to prevent silent extraction failures when `prompt.md` is missing.
+- **Database Layer**: Updated `update_patient_identity` to support status synchronization across tables during patient identity updates.
+
 ## [2026-05-25] - Dashboard Display Optimization
 
 ### Changed

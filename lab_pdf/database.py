@@ -642,11 +642,11 @@ def unmark_patient_printed(patient_id, conn=None):
 # ─── Patient Identity Update ───────────────────────────────────────────────
 
 def update_patient_identity(patient_id, new_last_name, new_first_name,
-                            new_dob, conn=None):
-    """Update patient identity (name, DOB) across both tables.
+                            new_dob, status=None, conn=None):
+    """Update patient identity (name, DOB) and status across tables.
 
     This is the most complex write operation in the app:
-    1. Updates the patients table.
+    1. Updates the patients table (including optional status).
     2. Updates the patient_metadata table using the 4-field key.
     3. If the new identity already exists in metadata (IntegrityError),
        merges the old record's notes and printed_at into the existing
@@ -680,12 +680,20 @@ def update_patient_identity(patient_id, new_last_name, new_first_name,
         old_last, old_first, old_dob, liste_date = old_row
 
         # 1. Update patients table
-        cursor.execute(
-            """UPDATE patients
-               SET last_name = ?, first_name = ?, date_of_birth = ?
-               WHERE id = ?""",
-            (new_last_name, new_first_name, new_dob, patient_id),
-        )
+        if status:
+            cursor.execute(
+                """UPDATE patients
+                   SET last_name = ?, first_name = ?, date_of_birth = ?, status = ?
+                   WHERE id = ?""",
+                (new_last_name, new_first_name, new_dob, status, patient_id),
+            )
+        else:
+            cursor.execute(
+                """UPDATE patients
+                   SET last_name = ?, first_name = ?, date_of_birth = ?
+                   WHERE id = ?""",
+                (new_last_name, new_first_name, new_dob, patient_id),
+            )
 
         # 2. Update patient_metadata with conflict resolution
         try:

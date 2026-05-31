@@ -501,7 +501,7 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-warning ms-1" title="Modifier"
-                                                onclick="openEditPatientModal({{ patient.id }}, '{{ patient.last_name }}', '{{ patient.first_name }}', '{{ patient.date_of_birth }}')">
+                                                onclick="openEditPatientModal({{ patient.id }}, '{{ patient.last_name }}', '{{ patient.first_name }}', '{{ patient.date_of_birth }}', '{{ patient.status }}')">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <a href="{{ url_for('patient.download_patient_db', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Télécharger">
@@ -750,6 +750,14 @@
                         <div class="mb-3">
                             <label class="form-label text-muted small">Date de naissance</label>
                             <input type="text" id="edit-dob" name="date_of_birth" class="form-control" placeholder="DD/MM/YYYY">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Statut</label>
+                            <select id="edit-status" name="status" class="form-select">
+                                <option value="completed">Terminé</option>
+                                <option value="pending">En cours</option>
+                                <option value="rejected">Rejeté</option>
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">

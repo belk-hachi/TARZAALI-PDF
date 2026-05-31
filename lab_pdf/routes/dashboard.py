@@ -104,6 +104,7 @@ def update_patient_route():
     new_last_name = data.get("last_name")
     new_first_name = data.get("first_name")
     new_dob = data.get("date_of_birth")
+    status = data.get("status")
 
     if not patient_id or not new_last_name or not new_first_name:
         return jsonify({
@@ -112,7 +113,7 @@ def update_patient_route():
         }), 400
 
     success, error = update_patient_identity(
-        patient_id, new_last_name, new_first_name, new_dob
+        patient_id, new_last_name, new_first_name, new_dob, status=status
     )
 
     if success:
